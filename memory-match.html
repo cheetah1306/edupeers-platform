@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Memory Match - EduPeers</title>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(r => r.forEach(reg => reg.unregister()));
+      }
+      if (window.caches) {
+        caches.keys().then(k => k.forEach(key => caches.delete(key)));
+      }
+    </script>
+    <link rel="stylesheet" href="index.css?v=2026_refresh">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .memory-container {
+            max-width: 600px;
+            margin: 2rem auto;
+            text-align: center;
+            background: rgba(10, 14, 23, 0.95);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .memory-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 2rem;
+            background: rgba(255,255,255,0.05);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .memory-stats div {
+            display: flex;
+            flex-direction: column;
+            color: var(--hud-cyan);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .memory-stats b {
+            font-size: 1.5rem;
+            color: white;
+            margin-top: 5px;
+        }
+
+        /* 100% Guaranteed Robust Grid */
+        .simple-grid {
+            display: grid;
+            gap: 10px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Dynamically set columns in JS */
+        .grid-easy { grid-template-columns: repeat(4, 1fr); max-width: 450px; }
+        .grid-medium { grid-template-columns: repeat(4, 1fr); max-width: 550px; }
+        .grid-hard { grid-template-columns: repeat(5, 1fr); max-width: 650px; }
+
+        /* Responsive adjustments */
+        @media (max-width: 500px) {
+            .grid-easy { grid-template-columns: repeat(3, 1fr); }
+            /* Medium and Hard stay manageable sizes on mobile */
+            .grid-medium { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+            .grid-hard { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+        }
+
+        .simple-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 1/1; /* Native aspect-ratio on div is extremely reliable */
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .simple-card i {
+            font-size: 2.5rem;
+            color: white;
+            display: none; /* Hidden by default */
+        }
+
+        .simple-card.revealed {
+            background: linear-gradient(135deg, var(--hud-red), #ff3366);
+            border-color: var(--hud-red-glow);
+            transform: scale(1.05); /* Slight pop effect instead of 3D flip */
+        }
+
+        .simple-card.revealed i {
+            display: block; /* Show icon */
+        }
+
+        .simple-card.matched {
+            background: linear-gradient(135deg, var(--hud-cyan), #00cccc);
+            border-color: var(--hud-cyan-glow);
+            opacity: 0.8;
+            cursor: default;
+        }
+
+        .simple-card.matched i {
+            display: block;
+        }
+
+        .simple-card:hover:not(.revealed):not(.matched) {
+            background: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.4);
+        }
+
+        .controls {
+            margin-top: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        select.diff-select {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            cursor: pointer;
+        }
+        select.diff-select option {
+            color: black;
+        }
+        
+        .header-top {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            font-size: 1.2rem;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
+            transition: 0.2s;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.2); }
+
+    </style>
+</head>
+<body style="min-height: 100vh; background: #0a0e17; display: flex; align-items: center; justify-content: center; padding: 1rem;">
+    
+    <div class="memory-container">
+        <div class="header-top">
+            <a href="mind-games.html" class="back-btn" style="display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fa-solid fa-arrow-left"></i>
+              <img src="logo.png" alt="EduPeers Logo" style="height: 25px; width: auto; object-fit: contain;">
+            </a>
+            <h1 style="color: white; margin-left: 2rem; font-family: 'Playfair Display', serif;">Memory Match</h1>
+        </div>
+
+        <div class="memory-stats">
+            <div>Moves <b id="stat-moves">0</b></div>
+            <div>Time <b id="stat-time">00:00</b></div>
+            <div>Pairs <b id="stat-pairs">0/8</b></div>
+        </div>
+
+        <div class="simple-grid" id="grid">
+            <!-- JavaScript will inject cards here completely transparently -->
+        </div>
+
+        <div class="controls">
+            <select class="diff-select" id="difficulty" onchange="startGame()">
+                <option value="easy">Easy (6 pairs)</option>
+                <option value="medium" selected>Medium (8 pairs)</option>
+                <option value="hard">Hard (10 pairs)</option>
+            </select>
+            <button class="auth-btn" onclick="startGame()">Restart Game</button>
+        </div>
+        <p id="message" style="color: var(--hud-cyan); margin-top: 1.5rem; font-size: 1.1rem; height: 1.5rem;"></p>
+    </div>
+
+    <!-- Self-Contained Bulletproof Logic -->
+    <script>
+        const ICONS = [
+            'fa-atom', 'fa-brain', 'fa-microscope', 'fa-dna', 
+            'fa-calculator', 'fa-book-open', 'fa-robot', 'fa-lightbulb',
+            'fa-flask', 'fa-compass-drafting', 'fa-globe', 'fa-graduation-cap'
+        ];
+        
+        const DIFF_CONFIG = {
+            easy: { pairs: 6, class: 'grid-easy' },
+            medium: { pairs: 8, class: 'grid-medium' },
+            hard: { pairs: 10, class: 'grid-hard' }
+        };
+        
+        let grid = document.getElementById('grid');
+        let movesEl = document.getElementById('stat-moves');
+        let timeEl = document.getElementById('stat-time');
+        let pairsEl = document.getElementById('stat-pairs');
+        let msgEl = document.getElementById('message');
+        
+        let cards = [];
+        let firstCard = null;
+        let secondCard = null;
+        let locked = false;
+        
+        let moves = 0;
+        let matched = 0;
+        let seconds = 0;
+        let timer = null;
+        
+        function formatTime(sec) {
+            let m = Math.floor(sec / 60).toString().padStart(2, '0');
+            let s = (sec % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+        
+        function updateStats() {
+            let activePairs = DIFF_CONFIG[document.getElementById('difficulty').value].pairs;
+            movesEl.innerText = moves;
+            pairsEl.innerText = `${matched}/${activePairs}`;
+            timeEl.innerText = formatTime(seconds);
+        }
+        
+        function buildDeck(pairCount) {
+            let deck = [...ICONS.slice(0, pairCount), ...ICONS.slice(0, pairCount)];
+            // Shuffle
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+            return deck;
+        }
+        
+        function startGame() {
+            clearInterval(timer);
+            
+            let diffVal = document.getElementById('difficulty').value;
+            let config = DIFF_CONFIG[diffVal];
+            
+            seconds = 0;
+            moves = 0;
+            matched = 0;
+            locked = false;
+            firstCard = null;
+            secondCard = null;
+            updateStats();
+            msgEl.innerText = `Match all ${config.pairs} pairs!`;
+            
+            // Clean old cards and set grid class
+            grid.innerHTML = ''; 
+            grid.className = `simple-grid ${config.class}`;
+            
+            let deck = buildDeck(config.pairs);
+            
+            deck.forEach((icon, index) => {
+                let card = document.createElement('div');
+                card.className = 'simple-card';
+                card.dataset.icon = icon;
+                
+                // Add the icon inside (hidden by CSS until revealed class is added)
+                card.innerHTML = `<i class="fa-solid ${icon}"></i>`;
+                
+                card.onclick = () => handleCardClick(card);
+                grid.appendChild(card);
+            });
+            
+            // Start timer
+            timer = setInterval(() => {
+                seconds++;
+                updateStats();
+            }, 1000);
+        }
+        
+        function handleCardClick(card) {
+            if (locked) return;
+            if (card.classList.contains('revealed') || card.classList.contains('matched')) return;
+            
+            // Reveal card
+            card.classList.add('revealed');
+            
+            if (!firstCard) {
+                firstCard = card;
+                return;
+            }
+            
+            secondCard = card;
+            moves++;
+            updateStats();
+            checkMatch();
+        }
+        
+        function checkMatch() {
+            locked = true; // Wait for animation
+            
+            if (firstCard.dataset.icon === secondCard.dataset.icon) {
+                // Match!
+                firstCard.classList.remove('revealed');
+                firstCard.classList.add('matched');
+                
+                secondCard.classList.remove('revealed');
+                secondCard.classList.add('matched');
+                
+                matched++;
+                updateStats();
+                resetTurn();
+                
+                if (matched === DIFF_CONFIG[document.getElementById('difficulty').value].pairs) {
+                    clearInterval(timer);
+                    msgEl.innerText = "Congratulations! You won!";
+                    msgEl.style.color = "var(--hud-gold)";
+                }
+            } else {
+                // No match
+                setTimeout(() => {
+                    firstCard.classList.remove('revealed');
+                    secondCard.classList.remove('revealed');
+                    resetTurn();
+                }, 800);
+            }
+        }
+        
+        function resetTurn() {
+            firstCard = null;
+            secondCard = null;
+            locked = false;
+        }
+        
+        // Start game on load
+        startGame();
+        
+    </script>
+</body>
+</html>

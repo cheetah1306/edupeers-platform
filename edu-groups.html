@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>EduGroups - EduPeers</title>
+  <meta name="description" content="EduPeers - Collaborative study groups.">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(r => r.forEach(reg => reg.unregister()));
+    }
+    if (window.caches) {
+      caches.keys().then(k => k.forEach(key => caches.delete(key)));
+    }
+  </script>
+  <link rel="stylesheet" href="index.css?v=2026_refresh">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <meta name="theme-color" content="#19070f">
+  <link rel="apple-touch-icon" href="logo.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <style>
+    /* Similar base styles to PeersConnect */
+    .resource-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .resource-card:hover {
+      background: rgba(255, 255, 255, 0.06);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      border-color: var(--hud-red);
+    }
+    .resource-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 4px; height: 0%;
+      background: var(--hud-red);
+      transition: 0.4s;
+    }
+    .resource-card:hover::before { height: 100%; }
+    
+    .live-dot {
+      width: 8px; height: 8px; background: var(--hud-red); border-radius: 50%;
+      display: inline-block; margin-right: 8px; animation: pulse 2s infinite;
+    }
+    .connect-page { display: flex; flex-direction: column; flex: 1; height: auto; }
+    .connect-shell { flex: 1; padding: 2rem; display: flex; flex-direction: column; gap: 1.5rem; }
+    
+    .connect-hero { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.9fr); gap: 1.5rem; align-items: stretch; }
+    .connect-hero-copy, .connect-hero-summary, .sidebar-card, .directory-shell {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 22px;
+    }
+    .connect-hero-copy { padding: 1.8rem 1.9rem; }
+    .connect-hero-eyebrow { color: var(--hud-cyan); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 0.9rem; }
+    .connect-page-title { font-size: 1.85rem; margin-bottom: 0.9rem; }
+    .connect-hero-text { max-width: 62ch; color: rgba(255,255,255,0.74); line-height: 1.75; font-size: 1rem; }
+    .connect-summary-card { padding: 1.35rem; border-radius: 18px; background: linear-gradient(145deg, rgba(255, 224, 234, 0.12), rgba(255,255,255,0.02)); border: 1px solid rgba(255,255,255,0.1); }
+    .connect-summary-label { color: var(--text-muted); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+    .connect-summary-value { font-size: 2.6rem; font-weight: 800; color: var(--hud-cyan); font-family: 'Playfair Display', serif; line-height: 1; margin: 0.55rem 0 0.35rem; }
+    
+    .connect-grid { display: grid; grid-template-columns: minmax(280px, 330px) minmax(0, 1fr); gap: 1.5rem; flex: 1; height: 100%; }
+    .sidebar-card { padding: 1.4rem; }
+    .directory-shell { padding: 1.35rem; display: flex; flex-direction: column; gap: 1rem; min-height: 100%; }
+    
+    .peer-item {
+      display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; align-items: center; gap: 1rem;
+      padding: 1rem 1.05rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 18px; transition: 0.3s;
+    }
+    .peer-item:hover { background: rgba(255, 255, 255, 0.07); transform: translateY(-2px); border-color: rgba(255,255,255,0.14); }
+    
+    .peer-avatar { width: 45px; height: 45px; background: linear-gradient(135deg, var(--hud-purple), var(--hud-cyan)); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid rgba(255, 255, 255, 0.1); }
+    .peer-item-name { font-weight: 700; color: #fff; font-size: 1rem; }
+    .peer-item-note { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.25rem; }
+    
+    .connect-action-btn {
+      padding: 0.72rem 1rem; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.18);
+      background: linear-gradient(135deg, rgba(255, 93, 140, 0.95), rgba(255, 224, 234, 0.34));
+      color: #fff; font-weight: 700; cursor: pointer; transition: 0.4s; font-size: 0.85rem;
+    }
+    .connect-action-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(255,93,140,0.3); }
+
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+      z-index: 10000; display: none; align-items: center; justify-content: center;
+    }
+    .modal-content {
+      background: #111; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px;
+      padding: 2rem; width: 90%; max-width: 500px;
+    }
+    .modal-content input {
+      width: 100%; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);
+      background: transparent; color: white; padding: 10px; margin-bottom: 1rem;
+    }
+    .peer-select-list {
+      max-height: 200px; overflow-y: auto; margin-bottom: 1rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 10px;
+    }
+    .peer-select-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+
+    /* Immersive Chat */
+    #chat-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: #000; display: none; flex-direction: column; z-index: 10000;
+      animation: fadeIn 0.4s ease-out; overflow: hidden;
+    }
+    
+    .liquid-bg {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 0; filter: blur(80px); opacity: 0.8; background: #050505;
+    }
+    .blob {
+      position: absolute; width: 60vw; height: 60vh; border-radius: 50%;
+      mix-blend-mode: screen; animation: morph 20s infinite alternate, move 300s linear infinite;
+    }
+    .blob-1 { top: -10%; left: -10%; background: rgba(217, 72, 115, 0.34); animation-delay: 0s; }
+    .blob-2 { bottom: -10%; right: -10%; background: rgba(255, 139, 179, 0.28); animation-delay: -5s; }
+    .blob-3 { top: 20%; right: 10%; background: rgba(255, 224, 234, 0.22); animation-delay: -10s; }
+    @keyframes morph {
+      0% { border-radius: 40% 60% 60% 40% / 40% 40% 60% 60%; transform: scale(1); }
+      100% { border-radius: 60% 40% 40% 60% / 60% 60% 40% 40%; transform: scale(1.2); }
+    }
+    @keyframes move {
+      0% { transform: translate(0, 0) rotate(0deg); filter: hue-rotate(0deg); }
+      50% { transform: translate(20%, 20%) rotate(180deg); }
+      100% { transform: translate(0, 0) rotate(360deg); filter: hue-rotate(360deg); }
+    }
+    .glass-plane {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(120px) saturate(150%); z-index: 1;
+    }
+    .noise-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: url('https://grainy-gradients.vercel.app/noise.svg'); opacity: 0.15; pointer-events: none; z-index: 2;
+    }
+
+    #chat-header { padding: 1.5rem 2rem; background: rgba(255, 255, 255, 0.02); border-bottom: 1px solid rgba(255, 224, 234, 0.18); display: flex; justify-content: space-between; align-items: center; z-index: 10; backdrop-filter: blur(20px); }
+    .back-btn { width: 45px; height: 45px; border-radius: 12px; background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.05)); border: 1px solid rgba(255,255,255,0.14); color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.4s; z-index: 10; }
+    
+    #chat-messages-container {
+      flex: 1; width: 100%; max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; position: relative; z-index: 5; overflow: hidden;
+    }
+    #chat-messages-container::before {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' opacity='0.8'%3E%3Cpath d='M25,45 Q20,45 20,40 Q20,35 25,35 Q30,25 40,30 Q50,25 55,35 Q60,35 60,40 Q60,45 55,45 Z'/%3E%3Cpath d='M90,25 L90,40 M80,28 L100,28 M80,25 L80,40 Q90,43 100,40 L100,25 Q90,28 80,25'/%3E%3Ccircle cx='150' cy='35' r='10'/%3E%3Cpath d='M135,40 Q150,45 165,30'/%3E%3Cpolygon points='25,100 30,110 40,110 32,117 35,127 25,121 15,127 18,117 10,110 20,110'/%3E%3Crect x='80' y='85' width='26' height='34' rx='3'/%3E%3Crect x='84' y='89' width='18' height='10'/%3E%3Ccircle cx='87' cy='104' r='2' fill='%23ffffff'/%3E%3Ccircle cx='93' cy='104' r='2' fill='%23ffffff'/%3E%3Ccircle cx='99' cy='104' r='2' fill='%23ffffff'/%3E%3Ccircle cx='87' cy='111' r='2' fill='%23ffffff'/%3E%3Ccircle cx='93' cy='111' r='2' fill='%23ffffff'/%3E%3Ccircle cx='99' cy='111' r='2' fill='%23ffffff'/%3E%3Cellipse cx='150' cy='110' rx='16' ry='7' transform='rotate(30 150 110)'/%3E%3Cellipse cx='150' cy='110' rx='16' ry='7' transform='rotate(-30 150 110)'/%3E%3Cellipse cx='150' cy='110' rx='16' ry='7' transform='rotate(90 150 110)'/%3E%3Ccircle cx='150' cy='110' r='2' fill='%23ffffff'/%3E%3Cpolygon points='130,90 135,85 150,100 145,105'/%3E%3Cpolygon points='130,90 125,95 127,97'/%3E%3Cpath d='M35,155 L45,155 M40,150 L40,160'/%3E%3Cpath d='M90,150 L100,160 M100,150 L90,160'/%3E%3Cpath d='M140,150 L150,150 M140,157 L150,157'/%3E%3Cpath d='M35,70 C45,65 45,85 55,80'/%3E%3Cpath d='M100,70 A12,12 0 1,1 90,60'/%3E%3Ctext x='5' y='80' fill='%23ffffff' stroke='none' font-family='Arial' font-size='20'%3E%E2%88%9E%3C/text%3E%3Ctext x='160' y='160' fill='%23ffffff' stroke='none' font-family='Arial' font-size='20'%3E%CF%80%3C/text%3E%3Ctext x='105' y='125' fill='%23ffffff' stroke='none' font-family='Arial' font-size='20'%3E%E2%88%91%3C/text%3E%3Ctext x='20' y='20' fill='%23ffffff' stroke='none' font-family='Arial' font-size='16'%3Ex%C2%B2%3C/text%3E%3Cpath d='M160,70 L170,80 L160,90'/%3E%3C/g%3E%3C/svg%3E");
+      background-size: 180px; opacity: 0.15; z-index: 0; pointer-events: none; animation: floatBg 80s linear infinite;
+    }
+    @keyframes floatBg { from { background-position: 0 0; } to { background-position: -280px -280px; } }
+
+    #chat-messages { flex: 1; padding: 2rem; overflow-y: scroll; display: flex; flex-direction: column; gap: 1.5rem; width: 100%; scrollbar-width: thin; scrollbar-color: var(--hud-purple) rgba(255,255,255,0.05); }
+    #chat-messages::-webkit-scrollbar { width: 6px; }
+    #chat-messages::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+    #chat-messages::-webkit-scrollbar-thumb { background: var(--hud-purple); border-radius: 10px; }
+
+    .chat-msg-wrapper { display: flex; align-items: flex-end; gap: 0.8rem; max-width: 70%; margin-bottom: 0.4rem; z-index: 10;}
+    .chat-msg-wrapper.sent { align-self: flex-end; flex-direction: row-reverse; }
+    .chat-msg-wrapper.received { align-self: flex-start; }
+    .chat-msg { padding: 0.9rem 1.4rem; border-radius: 20px; font-size: 0.92rem; line-height: 1.5; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+    .chat-msg.sent { background: linear-gradient(135deg, var(--hud-red), var(--hud-purple)); color: white; border-bottom-right-radius: 4px; }
+    .chat-msg.received { background: rgba(255, 255, 255, 0.05); color: #f0f0f0; border: 1px solid rgba(255, 255, 255, 0.1); border-bottom-left-radius: 4px; backdrop-filter: blur(10px); }
+    .msg-sender-name { font-size: 0.75rem; color: var(--hud-cyan); font-weight: bold; margin-bottom: 5px; display: block; }
+    #chat-footer-container { width: 100%; background: rgba(5, 7, 10, 0.8); backdrop-filter: blur(15px); border-top: 1px solid rgba(255, 255, 255, 0.08); padding: 1.5rem 0; z-index: 10; }
+    #chat-footer { max-width: 900px; margin: 0 auto; padding: 0 1.5rem; display: flex; gap: 1.5rem; align-items: center; }
+    #chat-footer input { flex: 1; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 1.2rem 2rem; border-radius: 20px; color: white; outline: none; }
+    #chat-footer button { background: none; border: none; color: var(--hud-cyan); font-size: 1.4rem; cursor: pointer; }
+    .group-typing-indicator { font-size: 0.8rem; color: rgba(255,255,255,0.7); position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); z-index: 15; }
+
+    /* Emoji and Image specific */
+    .reaction-bar { position: absolute; bottom: -15px; right: 10px; background: rgba(0,0,0,0.8); border-radius: 10px; padding: 2px 5px; font-size: 0.8rem; display: flex; gap: 5px; }
+    .msg-image { max-width: 100%; border-radius: 10px; margin-bottom: 5px; }
+
+    /* System messages (member left, member added) */
+    .chat-system-message {
+      text-align: center;
+      padding: 0.5rem 1rem;
+      z-index: 10;
+      animation: fadeInSystem 0.5s ease-out;
+    }
+    .chat-system-message span {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.78rem;
+      padding: 0.4rem 1.2rem;
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+    }
+    @keyframes fadeInSystem {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Banner shown when a left member views the chat */
+    .chat-left-banner {
+      text-align: center;
+      padding: 0.8rem 1.2rem;
+      margin: 0.5rem auto 1rem;
+      background: rgba(243, 156, 18, 0.12);
+      border: 1px solid rgba(243, 156, 18, 0.3);
+      border-radius: 14px;
+      color: #f39c12;
+      font-size: 0.85rem;
+      font-weight: 600;
+      z-index: 10;
+      max-width: 600px;
+      animation: fadeInSystem 0.5s ease-out;
+    }
+    .chat-left-banner i {
+      margin-right: 8px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- Ambient background -->
+  <div class="bg-orbs" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav>
+    <a href="index.html" class="brand" style="text-decoration: none; transition: 0.3s; color: white;">
+      <i class="fa-solid fa-chevron-left" style="font-size: 1rem;"></i>
+      <img src="logo.png" alt="EduPeers Logo" style="height: 35px; width: auto; object-fit: contain; vertical-align: middle; margin-left: 0.5rem;">
+    </a>
+    <div style="display: flex; align-items: center; gap: 1.2rem;">
+      <a href="settings.html" class="user-profile" id="user-profile" style="text-decoration: none;">
+        <div class="avatar" id="navAvatar">U</div>
+        <div style="display: flex; flex-direction: column; align-items: flex-start;">
+          <span class="user-name" id="topbar-user-name" style="line-height:1.2;">User</span>
+        </div>
+        <i class="fa-solid fa-gear" style="font-size: 0.9rem; color: var(--text-muted); margin-left: 0.5rem;"></i>
+      </a>
+    </div>
+  </nav>
+
+  <main class="dashboard connect-page">
+    <div class="glass-panel connect-shell">
+      <header class="connect-hero">
+        <div class="connect-hero-copy">
+          <div class="connect-hero-eyebrow"><i class="fa-solid fa-users"></i> EduGroups 2.0</div>
+          <h1 class="connect-page-title">Collaborative Study Spaces</h1>
+          <p class="connect-hero-text">
+            Form dedicated groups with your connected peers. Enter real-time collaborative spaces featuring instant messaging, rich text formatting, file sharing, and live presence to supercharge your study sessions.
+          </p>
+          <button class="connect-action-btn" id="createGroupBtn" style="margin-top: 1.5rem;"><i class="fa-solid fa-plus"></i> Create Group</button>
+        </div>
+        
+        <div class="connect-hero-summary">
+          <div class="connect-summary-card">
+            <div class="connect-summary-label"><span class="live-dot"></span> Online Now</div>
+            <div class="connect-summary-value" id="globalOnlineCount">--</div>
+            <div class="connect-summary-copy">Members active across the platform</div>
+          </div>
+          <div class="connect-summary-list">
+            <span><i class="fa-solid fa-check-double"></i> Real-time receipts</span>
+            <span><i class="fa-solid fa-paperclip"></i> Rich file sharing</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="connect-grid">
+        <aside class="peer-sidebar">
+          <div class="sidebar-card">
+            <h3 class="sidebar-heading">My Active Groups</h3>
+            <p class="sidebar-copy">Study spaces you are part of.</p>
+            <div class="peer-list-stack" id="myGroupsList">
+               <div class="connect-loading-state"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</div>
+            </div>
+          </div>
+        </aside>
+
+        <section class="peer-main directory-shell">
+          <div class="directory-header">
+            <div>
+              <h2 class="directory-title">Group Directory</h2>
+              <p class="directory-copy">Select a group from the sidebar to open the collaborative space.</p>
+            </div>
+          </div>
+          
+          <div class="peer-list-stack" id="groupsDirectoryList" style="flex:1; align-items:center; justify-content:center; text-align:center;">
+             <p style="color:rgba(255,255,255,0.5);">Select a group to expand its details or create a new one to get started.</p>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <!-- Create Group Modal -->
+  <div class="modal-overlay" id="createGroupModal">
+    <div class="modal-content">
+      <h2 style="margin-bottom:1rem; color:white;">Create New EduGroup</h2>
+      <input type="text" id="groupNameInput" placeholder="Group Name (e.g. Advanced Physics Project)" required>
+      <input type="text" id="groupTopicInput" placeholder="Topic (e.g. Quantum Mechanics)">
+      <h4 style="margin-bottom:0.5rem; color:white;">Select Peers to Add</h4>
+      <div class="peer-select-list" id="peerSelectList">
+         <!-- Populated via JS -->
+         <p style="color:var(--text-muted); font-size:0.9rem;">Loading peers...</p>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px;">
+        <button class="connect-action-btn" id="cancelGroupBtn" style="background:transparent; border-color:var(--hud-red); color:var(--hud-red);">Cancel</button>
+        <button class="connect-action-btn" id="confirmCreateGroupBtn">Create Group</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Members Modal -->
+  <div class="modal-overlay" id="addMembersModal">
+    <div class="modal-content">
+      <h2 style="margin-bottom:1rem; color:white;">Add Members</h2>
+      <div class="peer-select-list" id="addPeerSelectList">
+         <p style="color:var(--text-muted); font-size:0.9rem;">Loading peers...</p>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px;">
+        <button class="connect-action-btn" id="cancelAddBtn" style="background:transparent; border-color:var(--hud-red); color:var(--hud-red);">Cancel</button>
+        <button class="connect-action-btn" id="confirmAddBtn">Add Members</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat Overlay -->
+  <div id="chat-overlay">
+    <div class="liquid-bg">
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+      <div class="blob blob-3"></div>
+    </div>
+    <div class="glass-plane"></div>
+    <div class="noise-overlay"></div>
+
+    <div id="chat-header">
+      <div id="chat-header-left">
+        <button class="back-btn" id="chat-close-btn"><i class="fa-solid fa-arrow-left"></i></button>
+        <div style="display:flex; align-items:center; gap: 15px;">
+          <div class="peer-avatar" style="width: 50px; height: 50px; font-size: 1.2rem;">G</div>
+          <div>
+            <h2 id="chat-title" style="margin:0; font-size: 1.4rem; font-weight: 700; letter-spacing: 0.05em;">Group Name</h2>
+            <span id="chat-subtitle" style="font-size: 0.85rem; color: var(--hud-cyan); font-weight: 600;">0 Members</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <button class="connect-action-btn" id="openAddMembersBtn" style="padding: 0.5rem 1rem;"><i class="fa-solid fa-user-plus"></i> Add Members</button>
+      </div>
+    </div>
+    
+    <div class="group-typing-indicator" id="groupTypingIndicator"></div>
+    
+    <div id="chat-messages-container">
+      <div id="chat-messages">
+         <!-- Messages injected here -->
+      </div>
+    </div>
+    
+    <div id="chat-footer-container">
+      <div id="chat-footer">
+        <button id="attachFileBtn"><i class="fa-solid fa-paperclip"></i></button>
+        <input type="text" id="chat-input" placeholder="Message group...">
+        <button id="sendBtn"><i class="fa-solid fa-paper-plane"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="edu-groups.js?v=2026_refresh"></script>
+</body>
+</html>

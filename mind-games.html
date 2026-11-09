@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Cognitive Games - EduPeers</title>
+  <meta name="description" content="EduPeers - Mind Games.">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(r => r.forEach(reg => reg.unregister()));
+    }
+    if (window.caches) {
+      caches.keys().then(k => k.forEach(key => caches.delete(key)));
+    }
+  </script>
+  <link rel="stylesheet" href="index.css?v=2026_refresh">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- PWA & Mobile Optimization tags -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0a0e17">
+  <link rel="apple-touch-icon" href="logo.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+
+<body>
+  <!-- Ambient background -->
+  <div class="bg-orbs" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav>
+    <a href="index.html" class="brand" style="text-decoration: none; transition: 0.3s; color: white;">
+      <i class="fa-solid fa-chevron-left" style="font-size: 1rem;"></i>
+      <img src="logo.png" alt="EduPeers Logo" style="height: 35px; width: auto; object-fit: contain; vertical-align: middle; margin-left: 0.5rem;">
+    </a>
+    <div style="display: flex; align-items: center; gap: 1.2rem;">
+      <a href="settings.html" class="user-profile" id="user-profile" style="text-decoration: none;">
+        <div class="avatar" id="topbar-avatar">A</div>
+        <div style="display: flex; flex-direction: column; align-items: flex-start;">
+          <span class="user-name" id="topbar-user-name" style="line-height:1.2;">Akshay</span>
+        </div>
+        <i class="fa-solid fa-gear" style="font-size: 0.9rem; color: var(--text-muted); margin-left: 0.5rem;"></i>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Focused Launch Page -->
+  <main class="dashboard" style="display: flex; justify-content: center; align-items: center; min-height: 70vh;">
+    <section class="glass-panel mind-games-widget" style="width: 100%; max-width: 1100px; grid-column: span 12; box-shadow: 0 30px 60px rgba(0,0,0,0.6);">
+      <div class="panel-title" style="justify-content: center; font-size: 1.5rem; margin-bottom: 2rem;">
+        <i class="fa-solid fa-brain"></i> Cognitive Mind Games
+      </div>
+
+      <div class="games-grid">
+        <a href="memory-match.html" class="game-card" style="text-decoration:none; display: block;">
+          <div class="icon-cube memory-cube" aria-hidden="true">
+            <span class="cube-face cube-front"><i class="fa-solid fa-layer-group"></i></span>
+          </div>
+          <div class="game-title">Memory Match</div>
+          <div class="game-desc">Test your short-term recall with evolving sequential patterns. Form connections rapidly.</div>
+        </a>
+        <div class="game-card" id="game-logic">
+          <div class="icon-cube logic-cube" aria-hidden="true">
+            <span class="cube-face cube-front"><i class="fa-solid fa-diagram-project"></i></span>
+          </div>
+          <div class="game-title">Logic Trail</div>
+          <div class="game-desc">Solve combinatorial puzzles and algorithmic challenges before the timeline collapses.</div>
+        </div>
+        <div class="game-card" id="game-attention">
+          <div class="icon-cube focus-cube" aria-hidden="true">
+            <span class="cube-face cube-front"><i class="fa-solid fa-eye"></i></span>
+          </div>
+          <div class="game-title">Focus Sprint</div>
+          <div class="game-desc">A continuous attention drill filtering signal from noise. Enhances prolonged study focus.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Memory Game Overlay -->
+  <div class="game-overlay" id="memory-game-overlay" role="dialog" aria-modal="true" aria-labelledby="memory-game-title">
+    <div class="game-header">
+      <div class="memory-heading">
+        <h1 id="memory-game-title">Memory Match</h1>
+        <p>Flip the cards, find every pair, and beat your best run.</p>
+      </div>
+      <div class="memory-toolbar">
+        <label class="memory-control" for="memory-difficulty">
+          <span>Difficulty</span>
+          <select id="memory-difficulty">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+        </label>
+        <button class="auth-btn auth-btn-secondary" id="restart-game-inline" style="margin:0; padding: 0.6rem 1.2rem; border-radius: 99px;">
+          <i class="fa-solid fa-rotate-right"></i> Restart
+        </button>
+        <button class="auth-btn auth-btn-secondary" id="close-game" style="margin:0; padding: 0.6rem 1.2rem; border-radius: 99px;">
+          <i class="fa-solid fa-xmark"></i> Exit
+        </button>
+      </div>
+    </div>
+    <div class="stats-bar">
+      <span>Moves: <b id="move-count">0</b></span>
+      <span>Time: <b id="game-timer">00:00</b></span>
+      <span>Pairs: <b id="match-count">0/0</b></span>
+      <span>Best: <b id="best-score">--</b></span>
+    </div>
+    <p class="memory-status" id="memory-status" aria-live="polite">
+      Select a difficulty and start matching.
+    </p>
+    <div class="memory-board-shell">
+      <div class="memory-grid" id="memory-grid">
+        <!-- Cards injected via JS -->
+      </div>
+    </div>
+    <div id="game-result" style="text-align: center; margin-top: 2rem; display: none;" aria-live="polite">
+      <h2 style="font-family: 'Playfair Display', serif; font-size: 2rem; color: #fff; margin-bottom: 1rem;">Complete!</h2>
+      <p id="game-result-summary" style="color: var(--text-muted); margin-bottom: 1.5rem;">You cleared the board.</p>
+      <button class="auth-btn" id="restart-game" style="padding: 0.8rem 2rem;">Play Again</button>
+    </div>
+  </div>
+
+  <!-- Logic Trail Overlay -->
+  <div class="game-overlay logic-trail-overlay" id="logic-trail-overlay" role="dialog" aria-modal="true" aria-labelledby="logic-trail-title">
+    <div class="game-header">
+      <div class="memory-heading">
+        <h1 id="logic-trail-title">Logic Trail</h1>
+        <p>Read the pattern, choose the strongest answer, and keep your streak alive.</p>
+      </div>
+      <div class="memory-toolbar">
+        <button class="auth-btn auth-btn-secondary" id="logic-restart-inline" style="margin:0; padding: 0.6rem 1.2rem; border-radius: 99px;">
+          <i class="fa-solid fa-rotate-right"></i> Restart
+        </button>
+        <button class="auth-btn auth-btn-secondary" id="logic-close-game" style="margin:0; padding: 0.6rem 1.2rem; border-radius: 99px;">
+          <i class="fa-solid fa-xmark"></i> Exit
+        </button>
+      </div>
+    </div>
+
+    <div class="stats-bar logic-trail-stats">
+      <span>Round: <b id="logic-round-count">1/1</b></span>
+      <span>Score: <b id="logic-score-count">0</b></span>
+      <span>Streak: <b id="logic-streak-count">0</b></span>
+      <span>Best: <b id="logic-best-score">0</b></span>
+    </div>
+
+    <p class="memory-status" id="logic-status" aria-live="polite">
+      Open the trail and solve each puzzle before moving ahead.
+    </p>
+
+    <section class="logic-trail-shell" aria-live="polite">
+      <div class="logic-trail-card">
+        <div class="logic-trail-meta">
+          <span class="logic-pill" id="logic-category-label">Pattern</span>
+          <span class="logic-pill" id="logic-difficulty-label">Warm-up</span>
+        </div>
+
+        <div class="logic-trail-prompt" id="logic-prompt">
+          Loading puzzle...
+        </div>
+
+        <div class="logic-trail-context" id="logic-context">
+          Find the option that best completes the trail.
+        </div>
+
+        <div class="logic-trail-options" id="logic-options" role="list">
+          <!-- Options injected via JS -->
+        </div>
+
+        <div class="logic-trail-feedback" id="logic-feedback">
+          Select one answer to continue.
+        </div>
+
+        <div class="logic-trail-actions">
+          <button class="auth-btn" id="logic-next-btn" style="max-width: 260px; margin: 0;">
+            <span>Next Puzzle</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <div id="logic-result" class="logic-result" aria-live="polite">
+        <h2>Trail Complete</h2>
+        <p id="logic-result-summary">You finished the full logic route.</p>
+        <button class="auth-btn" id="logic-restart-btn" style="max-width: 260px;">
+          <span>Run Again</span>
+          <i class="fa-solid fa-rotate-right"></i>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Focus Sprint Overlay -->
+  <div class="game-overlay focus-sprint-overlay" id="focus-sprint-overlay" role="dialog" aria-modal="true" aria-labelledby="focus-sprint-title">
+    <div class="game-header">
+      <div class="memory-heading">
+        <h1 id="focus-sprint-title">Focus Sprint</h1>
+        <p>Lock onto the live target, filter the noise, and clear as many rounds as you can.</p>
+      </div>
+      <div class="memory-toolbar">
+        <label class="memory-control" for="focus-difficulty">
+          <span>Difficulty</span>
+          <select id="focus-difficulty">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+        </label>
+        <button class="auth-btn auth-btn-secondary" id="focus-restart-inline" style="margin:0; padding: 0.6rem 1.2rem; border-radius: 99px;">
+          <i class="fa-solid fa-rotate-right"></i> Restart
+        </button>
+        <button class="auth-btn auth-btn-secondary" id="focus-close-game" style="margin:0; padding: 0.6rem 1.2rem; border-radius: 99px;">
+          <i class="fa-solid fa-xmark"></i> Exit
+        </button>
+      </div>
+    </div>
+
+    <div class="stats-bar focus-sprint-stats">
+      <span>Time: <b id="focus-time-count">00:00</b></span>
+      <span>Score: <b id="focus-score-count">0</b></span>
+      <span>Clears: <b id="focus-round-count">0</b></span>
+      <span>Best: <b id="focus-best-score">0</b></span>
+    </div>
+
+    <p class="memory-status" id="focus-status" aria-live="polite">
+      Stay on the target and ignore the visual noise.
+    </p>
+
+    <section class="focus-sprint-shell">
+      <div class="focus-sprint-card">
+        <div class="focus-sprint-target-row">
+          <div class="focus-sprint-target-panel">
+            <span class="focus-label">Active target</span>
+            <div class="focus-target-token" id="focus-target-token">A7</div>
+          </div>
+          <div class="focus-sprint-target-panel">
+            <span class="focus-label">Targets left</span>
+            <div class="focus-target-count" id="focus-target-count">0</div>
+          </div>
+        </div>
+
+        <div class="focus-sprint-instruction" id="focus-instruction">
+          Tap every matching tile before the clock expires.
+        </div>
+
+        <div class="focus-sprint-board" id="focus-board" role="grid" aria-label="Focus Sprint board">
+          <!-- Cells injected via JS -->
+        </div>
+
+        <div class="focus-sprint-feedback" id="focus-feedback">
+          Clean rounds build momentum. Wrong taps cost points.
+        </div>
+      </div>
+
+      <div class="focus-sprint-result" id="focus-result" aria-live="polite">
+        <h2>Sprint Complete</h2>
+        <p id="focus-result-summary">You finished the session.</p>
+        <button class="auth-btn" id="focus-restart-btn" style="max-width: 260px;">
+          <span>Run Again</span>
+          <i class="fa-solid fa-rotate-right"></i>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <script src="memory-game.js?v=2026_refresh"></script>
+  <script src="logic-trail.js?v=2026_refresh"></script>
+  <script src="focus-sprint.js?v=2026_refresh"></script>
+  <script src="app.js?v=2026_refresh"></script>
+  <script src="snow.js?v=2026_refresh"></script>
+  <script src="parallax.js?v=2026_refresh"></script>
+</body>
+
+</html>

@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+backend/node_modules/
+
+# Environment Variables
+.env
+*.env
+backend/.env
+
+# Logs & temp files
+*.log
+backend/*.log
+*.tmp
+backend/*.tmp
+
+# Build & Editor
+.vscode/
+.kilo/
+temp_payload.json
+.DS_Store
+Thumbs.db
+

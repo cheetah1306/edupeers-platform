@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>EduPeers L&D - Enterprise Learning & Development Platform</title>
+
+  <meta name="description"
+    content="EduPeers L&D - Role-governed enterprise learning platform with assessment engines, competency mapping, content libraries, and real-time analytics.">
+
+  <script>
+    // Clear stale service workers and old caches
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(r => r.forEach(reg => reg.unregister()));
+    }
+    if (window.caches) {
+      caches.keys().then(k => k.forEach(key => caches.delete(key)));
+    }
+  </script>
+
+  <!-- Core & Design System CSS -->
+  <link rel="stylesheet" href="index.css?v=2026_trainee_symbol_v10">
+
+  <!-- FontAwesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Chart.js for Admin & Trainer Dashboards -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- PWA & Mobile Meta -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0a0e17">
+  <link rel="apple-touch-icon" href="logo.png">
+  <link rel="icon" type="image/png" href="logo.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+
+<body>
+
+  <!-- Ambient background glow orbs -->
+  <div class="bg-orbs" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+  </div>
+
+  <!-- Top Application Navigation -->
+  <header class="app-header">
+    <div class="nav-left">
+      <a href="#" class="brand-link" onclick="switchNavTab('home')">
+        <img src="logo.png" alt="EduPeers Logo" class="nav-logo">
+        <div class="brand-text">
+          <span class="brand-title">EduPeers</span>
+          <span class="brand-subtitle">L&D Portal</span>
+        </div>
+      </a>
+      
+      <!-- Role Badge -->
+      <div id="nav-role-badge" class="role-badge role-trainee">
+        <i class="fa-solid fa-user-graduate"></i>
+        <span id="role-badge-text">TRAINEE</span>
+      </div>
+    </div>
+
+    <!-- Global Search -->
+    <div class="nav-center">
+      <div class="global-search-container">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="global-search-input" placeholder="Search courses, modules, assessments, trainers..." oninput="handleGlobalSearch(this.value)" autocomplete="off">
+        <div id="search-results-dropdown" class="search-results-dropdown" style="display: none;"></div>
+      </div>
+    </div>
+
+    <!-- Right Controls: Utilities, Notifications, User Profile -->
+    <div class="nav-right">
+      <!-- Mobile Dedicated Search Button -->
+      <button class="mobile-search-trigger" onclick="openMobileSearch()" title="Search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </button>
+
+      <!-- Shared Tools Quick Menu -->
+      <div class="dropdown">
+        <button class="nav-icon-btn" title="Intelligence & Learning Tools" onclick="toggleToolsMenu()">
+          <i class="fa-solid fa-shapes"></i>
+          <span class="nav-icon-label">Tools</span>
+        </button>
+        <div id="tools-dropdown" class="dropdown-menu">
+          <a href="ai-tutor.html" class="dropdown-item"><i class="fa-solid fa-robot" style="color:var(--hud-purple);"></i> Expert AI Tutor</a>
+          <a href="notes.html" class="dropdown-item"><i class="fa-solid fa-note-sticky" style="color:var(--hud-gold);"></i> Study Notes</a>
+          <a href="mind-games.html" class="dropdown-item"><i class="fa-solid fa-brain" style="color:#ff758f;"></i> Cognitive Games</a>
+          <a href="peers-connect.html" class="dropdown-item"><i class="fa-solid fa-users" style="color:#7cf29a;"></i> Peers Connect</a>
+          <a href="edu-groups.html" class="dropdown-item"><i class="fa-solid fa-user-group" style="color:var(--hud-cyan);"></i> EduGroups</a>
+          <a href="ai-mark-analysis.html" class="dropdown-item"><i class="fa-solid fa-chart-line" style="color:#ffa200;"></i> AI Mark Analysis</a>
+        </div>
+      </div>
+
+      <!-- Notifications -->
+      <div class="dropdown">
+        <button class="nav-icon-btn" id="btn-notifications" title="Notifications" onclick="toggleNotificationsDrawer()">
+          <i class="fa-solid fa-bell"></i>
+          <span id="notification-badge" class="badge-count" style="display:none;">0</span>
+        </button>
+        <div id="notifications-drawer" class="notifications-drawer" style="display: none;">
+          <div class="drawer-header">
+            <h4><i class="fa-solid fa-bell"></i> Notifications</h4>
+            <button class="btn-text-sm" onclick="markAllNotificationsRead()">Clear All</button>
+          </div>
+          <div id="notifications-list" class="drawer-content">
+            <div class="empty-state-sm">No new notifications</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Menu -->
+      <div class="dropdown">
+        <button class="user-menu-btn" onclick="toggleUserDropdown()">
+          <div class="avatar-sm" id="topbar-avatar">U</div>
+          <div class="user-info-text">
+            <span class="user-display-name" id="topbar-user-name">User</span>
+            <span class="user-role-label" id="topbar-user-role">Trainee</span>
+          </div>
+          <i class="fa-solid fa-chevron-down" style="font-size:0.75rem; color:rgba(255,255,255,0.6);"></i>
+        </button>
+        <div id="user-dropdown" class="dropdown-menu">
+          <a href="javascript:void(0)" class="dropdown-item" onclick="switchNavTab('profile')"><i class="fa-solid fa-id-card"></i> My Profile</a>
+          <div class="dropdown-divider"></div>
+          <a href="javascript:void(0)" class="dropdown-item text-danger" onclick="handleLogout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Secondary Role-Specific Navigation Bar -->
+  <nav class="role-nav" id="role-nav-bar">
+    <div class="role-nav-tabs" id="role-nav-tabs">
+      <!-- Injected dynamically based on role -->
+    </div>
+  </nav>
+
+  <!-- Main View Container -->
+  <main class="app-main-content" id="app-main-content">
+    
+    <!-- ======================================================== -->
+    <!-- 1. UNIVERSAL HOME VIEW (Announcements, Metrics, Feed)   -->
+    <!-- ======================================================== -->
+    <section id="view-home" class="app-view active">
+      <!-- Welcome Hero Banner -->
+      <div class="glass-panel welcome-hero">
+        <div class="hero-text">
+          <h1>Welcome to EduPeers L&D, <span id="hero-user-name" class="highlight-cyan">Colleague</span>! 🚀</h1>
+          <p id="hero-tagline">Your integrated portal for skills acceleration, structured certifications, and collaborative peer learning.</p>
+        </div>
+        <div class="hero-stats" id="hero-quick-stats">
+          <!-- Dynamic metrics -->
+        </div>
+      </div>
+
+      <!-- Core Intelligence & Common Tools (Available across all 3 roles) -->
+      <div class="panel-section">
+        <div class="section-title">
+          <i class="fa-solid fa-shapes" style="color:var(--hud-cyan);"></i> Core Intelligence & Productivity Tools
+        </div>
+        <div class="tools-bento-grid">
+          <!-- 1. AI Tutor (Bento Card - Span 6) -->
+          <a href="ai-tutor.html" class="glass-card tool-bento-card tool-bento-hero">
+            <div class="tool-bento-icon" style="background:rgba(157,78,221,0.18); color:var(--hud-purple); border-color:rgba(157,78,221,0.35);">
+              <i class="fa-solid fa-robot"></i>
+            </div>
+            <div class="tool-bento-info">
+              <span class="tool-bento-tag" style="color:#c77dff;"><i class="fa-solid fa-wand-magic-sparkles"></i> AI MENTOR</span>
+              <h4>Expert AI Tutor</h4>
+              <p>24/7 personal technical mentor for concepts, code debugging, and instant guided explanations.</p>
+            </div>
+            <span class="tool-bento-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+          </a>
+
+          <!-- 2. Study Notes Area (Bento Card - Span 6) -->
+          <a href="notes.html" class="glass-card tool-bento-card tool-bento-hero">
+            <div class="tool-bento-icon" style="background:rgba(255,209,102,0.18); color:var(--hud-gold); border-color:rgba(255,209,102,0.35);">
+              <i class="fa-solid fa-note-sticky"></i>
+            </div>
+            <div class="tool-bento-info">
+              <span class="tool-bento-tag" style="color:var(--hud-gold);"><i class="fa-solid fa-cloud-arrow-up"></i> WORKSPACE</span>
+              <h4>Study Notes Area</h4>
+              <p>Rich Markdown notebook with cloud auto-sync, code highlighting, and structured subject tags.</p>
+            </div>
+            <span class="tool-bento-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+          </a>
+
+          <!-- 3. Cognitive Mind Games (Bento Card - Span 6) -->
+          <a href="mind-games.html" class="glass-card tool-bento-card tool-bento-hero">
+            <div class="tool-bento-icon" style="background:rgba(255,117,143,0.18); color:#ff758f; border-color:rgba(255,117,143,0.35);">
+              <i class="fa-solid fa-brain"></i>
+            </div>
+            <div class="tool-bento-info">
+              <span class="tool-bento-tag" style="color:#ff758f;"><i class="fa-solid fa-gamepad"></i> BRAIN AGILITY</span>
+              <h4>Cognitive Mind Games</h4>
+              <p>Neuro-agility training with memory matrices, pattern recognition, and logic agility challenges.</p>
+            </div>
+            <span class="tool-bento-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+          </a>
+
+          <!-- 4. Peers Connect (Bento Card - Span 6) -->
+          <a href="peers-connect.html" class="glass-card tool-bento-card tool-bento-hero">
+            <div class="tool-bento-icon" style="background:rgba(124,242,154,0.18); color:#7cf29a; border-color:rgba(124,242,154,0.35);">
+              <i class="fa-solid fa-users"></i>
+            </div>
+            <div class="tool-bento-info">
+              <span class="tool-bento-tag" style="color:#7cf29a;"><i class="fa-solid fa-network-wired"></i> DIRECTORY</span>
+              <h4>Peers Connect</h4>
+              <p>Cross-department peer directory with real-time availability, skill matching, and 1-on-1 chats.</p>
+            </div>
+            <span class="tool-bento-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+          </a>
+
+          <!-- 5. EduGroups (Bento Card - Span 6) -->
+          <a href="edu-groups.html" class="glass-card tool-bento-card tool-bento-hero">
+            <div class="tool-bento-icon" style="background:rgba(0,200,255,0.18); color:var(--hud-cyan); border-color:rgba(0,200,255,0.35);">
+              <i class="fa-solid fa-user-group"></i>
+            </div>
+            <div class="tool-bento-info">
+              <span class="tool-bento-tag" style="color:var(--hud-cyan);"><i class="fa-solid fa-people-group"></i> STUDY CIRCLES</span>
+              <h4>EduGroups</h4>
+              <p>Collaborative study circles, group discussions, knowledge sharing, and live cohort threads.</p>
+            </div>
+            <span class="tool-bento-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+          </a>
+
+          <!-- 6. AI Mark Analysis (Bento Card - Span 6) -->
+          <a href="ai-mark-analysis.html" class="glass-card tool-bento-card tool-bento-hero">
+            <div class="tool-bento-icon" style="background:rgba(255,170,0,0.18); color:#ffa200; border-color:rgba(255,170,0,0.35);">
+              <i class="fa-solid fa-chart-line"></i>
+            </div>
+            <div class="tool-bento-info">
+              <span class="tool-bento-tag" style="color:#ffa200;"><i class="fa-solid fa-chart-pie"></i> DIAGNOSTICS</span>
+              <h4>AI Mark Analysis</h4>
+              <p>Deep diagnostic score breakdown, strength discovery, and personalized study recommendations.</p>
+            </div>
+            <span class="tool-bento-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Admin Priority Announcements / Broadcasts -->
+      <div class="panel-section">
+        <div class="section-title" style="justify-content: space-between; align-items: center; display: flex;">
+          <span><i class="fa-solid fa-bullhorn" style="color:var(--hud-gold);"></i> Organization Announcements</span>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span id="announcements-last-updated" style="font-size:0.75rem; color:rgba(255,255,255,0.4); font-weight:400;"></span>
+            <button class="btn-primary" id="btn-home-publish-announcement" style="display:none; padding:6px 14px; font-size:0.8rem;" onclick="openCreatePostModal()">
+              <i class="fa-solid fa-plus"></i> Post Announcement
+            </button>
+          </div>
+        </div>
+        <div id="homepage-feed-container" class="feed-grid">
+          <div class="glass-card feed-card" style="display:flex; align-items:center; gap:12px; color:rgba(255,255,255,0.5);">
+            <i class="fa-solid fa-spinner fa-spin" style="color:var(--hud-cyan);"></i> Loading announcements...
+          </div>
+        </div>
+      </div>
+
+      <!-- Role-Specific Action Hub -->
+      <div class="panel-section" id="home-role-action-hub">
+        <!-- Dynamically rendered based on Trainee, Trainer, Admin -->
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- 2. TRAINEE VIEWS                                         -->
+    <!-- ======================================================== -->
+    
+    <!-- 2.1 Trainee Profile Builder -->
+    <section id="view-profile" class="app-view">
+      <div class="profile-layout">
+        <!-- Left: Overview Card & Completeness Gauge -->
+        <div class="glass-panel profile-sidebar">
+          <div class="avatar-lg" id="profile-avatar-display">T</div>
+          <h2 id="profile-full-name">Trainee Name</h2>
+          <span class="badge badge-purple" id="profile-role-badge">Trainee</span>
+          <p id="profile-department-label" class="text-muted"><i class="fa-solid fa-building"></i> Engineering</p>
+
+          <!-- Completeness Gauge -->
+          <div class="gauge-card">
+            <div class="gauge-header">
+              <span>Profile Completeness</span>
+              <strong id="profile-completeness-pct">0%</strong>
+            </div>
+            <div class="progress-bar-bg">
+              <div id="profile-completeness-bar" class="progress-bar-fill" style="width: 0%;"></div>
+            </div>
+            <span class="gauge-hint" id="profile-completeness-hint">Add qualifications and skills to reach 100%.</span>
+          </div>
+
+          <div class="profile-quick-meta">
+            <div><i class="fa-solid fa-envelope"></i> <span id="profile-email-text">email@company.com</span></div>
+            <div><i class="fa-solid fa-briefcase"></i> <span id="profile-designation-text">Designation</span></div>
+            <div><i class="fa-solid fa-user-tie"></i> Manager: <span id="profile-manager-text">Not specified</span></div>
+          </div>
+
+          <!-- Sign Out Button — always visible in profile sidebar -->
+          <div style="margin-top: 1.4rem; padding-top: 1.2rem; border-top: 1px solid rgba(255,255,255,0.08);">
+            <button
+              onclick="handleLogout()"
+              style="
+                display: flex; align-items: center; justify-content: center; gap: 10px;
+                width: 100%; padding: 12px 20px;
+                background: rgba(255, 80, 80, 0.1);
+                border: 1px solid rgba(255, 80, 80, 0.3);
+                border-radius: 12px;
+                color: #ff6b6b;
+                font-size: 0.9rem; font-weight: 700;
+                cursor: pointer;
+                transition: background 0.2s ease, transform 0.15s ease;
+              "
+              onmouseover="this.style.background='rgba(255,80,80,0.2)'"
+              onmouseout="this.style.background='rgba(255,80,80,0.1)'"
+              onmousedown="this.style.transform='scale(0.96)'"
+              onmouseup="this.style.transform='scale(1)'"
+            >
+              <i class="fa-solid fa-arrow-right-from-bracket"></i>
+              Sign Out
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: Editable Sections (Qualifications, Experience, Skills, Certifications) -->
+        <div class="profile-main-content">
+          
+          <!-- Skills Matrix -->
+          <div class="glass-panel profile-section">
+            <div class="section-header-flex">
+              <h3><i class="fa-solid fa-brain" style="color:var(--hud-cyan);"></i> Skills & Proficiency</h3>
+              <button class="btn-outline-sm" onclick="openAddSkillModal()"><i class="fa-solid fa-plus"></i> Add Skill</button>
+            </div>
+            <div id="profile-skills-list" class="skills-grid">
+              <div class="empty-state-sm">No skills added yet. Click "Add Skill" to build your competency profile.</div>
+            </div>
+          </div>
+
+          <!-- Academic & Professional Qualifications -->
+          <div class="glass-panel profile-section">
+            <div class="section-header-flex">
+              <h3><i class="fa-solid fa-graduation-cap" style="color:var(--hud-purple);"></i> Qualifications</h3>
+              <button class="btn-outline-sm" onclick="openAddQualificationModal()"><i class="fa-solid fa-plus"></i> Add Qualification</button>
+            </div>
+            <div id="profile-qualifications-list" class="timeline-list">
+              <div class="empty-state-sm">No qualifications recorded.</div>
+            </div>
+          </div>
+
+          <!-- Prior Work Experience -->
+          <div class="glass-panel profile-section">
+            <div class="section-header-flex">
+              <h3><i class="fa-solid fa-briefcase" style="color:var(--hud-gold);"></i> Experience & Projects</h3>
+              <button class="btn-outline-sm" onclick="openAddExperienceModal()"><i class="fa-solid fa-plus"></i> Add Experience</button>
+            </div>
+            <div id="profile-experience-list" class="timeline-list">
+              <div class="empty-state-sm">No work experience entries recorded.</div>
+            </div>
+          </div>
+
+          <!-- Verified Certificates Vault -->
+          <div class="glass-panel profile-section">
+            <div class="section-header-flex">
+              <h3><i class="fa-solid fa-award" style="color:#7cf29a;"></i> Verified Certifications</h3>
+              <button class="btn-outline-sm" onclick="openUploadCertificateModal()"><i class="fa-solid fa-upload"></i> Upload External</button>
+            </div>
+            <div id="profile-certificates-list" class="certs-grid">
+              <div class="empty-state-sm">No earned certifications yet. Complete course assessments to earn verified credentials.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- 2.2 Course Catalog & My Courses (Trainee) -->
+    <section id="view-courses" class="app-view">
+      <div class="view-header-bar">
+        <div>
+          <h2><i class="fa-solid fa-book-open-reader"></i> Course Catalog & Training Modules</h2>
+          <p class="text-muted">Explore expert-led curriculum, enroll with 1-click, and track milestone progress.</p>
+        </div>
+        <!-- Course Filter Pills -->
+        <div class="filter-pills" id="course-filter-pills">
+          <button class="filter-pill active" onclick="filterCoursesBySubject('all', this)">All Subjects</button>
+        </div>
+      </div>
+
+      <div class="course-tabs-strip">
+        <button class="tab-btn active" id="tab-btn-catalog" onclick="switchCourseSubTab('catalog')">Course Catalog</button>
+        <button class="tab-btn" id="tab-btn-mycourses" onclick="switchCourseSubTab('mycourses')">My Enrolled Courses (<span id="my-courses-count">0</span>)</button>
+      </div>
+
+      <!-- Catalog Grid -->
+      <div id="course-catalog-grid" class="cards-grid">
+        <div class="empty-state">Loading courses...</div>
+      </div>
+
+      <!-- My Courses List -->
+      <div id="my-courses-container" class="cards-grid" style="display: none;">
+        <div class="empty-state">You are not currently enrolled in any courses. Browse the catalog to get started!</div>
+      </div>
+    </section>
+
+    <!-- 2.3 Learning Resource Library (Trainee & Shared) -->
+    <section id="view-resources" class="app-view">
+      <div class="view-header-bar">
+        <div>
+          <h2><i class="fa-solid fa-folder-open"></i> Learning Resources & Study Materials</h2>
+          <p class="text-muted">Access curated video lectures, presentation slide decks, technical reference sheets, and lab guides.</p>
+        </div>
+        <div class="resource-type-filters">
+          <button class="filter-pill active" onclick="filterResourcesByType('all', this)">All Formats</button>
+          <button class="filter-pill" onclick="filterResourcesByType('video', this)"><i class="fa-solid fa-video"></i> Videos</button>
+          <button class="filter-pill" onclick="filterResourcesByType('slides', this)"><i class="fa-solid fa-file-powerpoint"></i> Slides</button>
+          <button class="filter-pill" onclick="filterResourcesByType('document', this)"><i class="fa-solid fa-file-pdf"></i> Documents</button>
+        </div>
+      </div>
+
+      <div id="resources-grid" class="cards-grid">
+        <div class="empty-state">Loading learning resources...</div>
+      </div>
+    </section>
+
+    <!-- 2.4 Assessments & Quizzes (Trainee) -->
+    <section id="view-assessments" class="app-view">
+      <div class="view-header-bar">
+        <div>
+          <h2><i class="fa-solid fa-file-signature"></i> Assessments & Certifying Quizzes</h2>
+          <p class="text-muted">Test your subject mastery with timed MCQ assessments. Pass to earn blockchain-verifiable certificates.</p>
+        </div>
+      </div>
+
+      <div id="assessments-grid" class="cards-grid">
+        <div class="empty-state">Loading assessments...</div>
+      </div>
+    </section>
+
+
+    <!-- ======================================================== -->
+    <!-- 3. TRAINER VIEWS                                         -->
+    <!-- ======================================================== -->
+    
+    <!-- 3.1 Trainer Studio: Questionnaire Builder -->
+    <section id="view-trainer-builder" class="app-view">
+      <div class="view-header-bar">
+        <div>
+          <h2><i class="fa-solid fa-pen-ruler"></i> Questionnaire & MCQ Assessment Studio</h2>
+          <p class="text-muted">Author technical assessments, set server-enforced countdown timers and deadlines, and define passing thresholds.</p>
+        </div>
+        <button class="btn-primary" onclick="openCreateQuestionnaireModal()">
+          <i class="fa-solid fa-plus"></i> Create New Assessment
+        </button>
+      </div>
+
+      <div id="trainer-questionnaires-list" class="cards-grid">
+        <div class="empty-state">Loading published assessments...</div>
+      </div>
+    </section>
+
+    <!-- 3.2 Trainer Trainee Performance & Participation Monitor -->
+    <section id="view-trainer-trainees" class="app-view">
+      <div class="view-header-bar">
+        <div>
+          <h2><i class="fa-solid fa-chart-user"></i> Trainee Participation & Performance Monitor</h2>
+          <p class="text-muted">Inspect real-time enrollment progress, score distributions, and attempt logs for your matching teaching domain.</p>
+        </div>
+        <div id="trainer-domain-badge-container">
+          <!-- Injected dynamically: Teaching Domain Badge -->
+        </div>
+      </div>
+
+      <!-- Overview Metric Cards -->
+      <div class="dashboard-stats-grid" id="trainer-metric-cards">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Domain-Matched Trainees Directory -->
+      <div class="glass-panel" style="margin-top: 1.5rem; padding: 1.5rem;">
+        <div class="section-header-flex">
+          <h3><i class="fa-solid fa-graduation-cap" style="color:var(--hud-cyan);"></i> Matched Trainees in Your Teaching Domain</h3>
+          <span class="badge badge-cyan" id="trainer-domain-tag">Domain Matching Active</span>
+        </div>
+        <div class="table-responsive" style="margin-top: 1rem;">
+          <table class="data-table" id="trainer-matched-trainees-table">
+            <thead>
+              <tr>
+                <th>Trainee Details</th>
+                <th>Demographics</th>
+                <th>Institution</th>
+                <th>Study Domain</th>
+                <th>Courses Enrolled</th>
+                <th>Test Performance</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="trainer-matched-trainees-tbody">
+              <tr><td colspan="7" class="text-center">Loading matching trainees...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Submissions Table -->
+      <div class="glass-panel" style="margin-top: 1.5rem; padding: 1.5rem;">
+        <div class="section-header-flex">
+          <h3><i class="fa-solid fa-list-check" style="color:var(--hud-purple);"></i> Trainee Assessment Submissions & Marks</h3>
+        </div>
+        <div class="table-responsive" style="margin-top: 1rem;">
+          <table class="data-table" id="trainer-submissions-table">
+            <thead>
+              <tr>
+                <th>Trainee</th>
+                <th>Assessment & Subject</th>
+                <th>Score / Marks</th>
+                <th>Status</th>
+                <th>Attempt</th>
+                <th>Submitted At</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td colspan="6" class="text-center">Loading submission data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3.3 Trainer Content Library Uploader -->
+    <section id="view-trainer-library" class="app-view">
+      <div class="view-header-bar">
+        <div>
+          <h2><i class="fa-solid fa-cloud-arrow-up" style="color:var(--hud-cyan);"></i> Content Library & Asset Manager</h2>
+          <p class="text-muted">Publish real-time video lectures, slide presentations, code walk-through documents, and guides for your enrolled trainees.</p>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn-outline-sm" onclick="loadTrainerResources()">
+            <i class="fa-solid fa-rotate"></i> Refresh
+          </button>
+          <button class="btn-primary" onclick="openUploadResourceModal()">
+            <i class="fa-solid fa-upload"></i> + Upload New Resource
+          </button>
+        </div>
+      </div>
+
+      <!-- Trainer Library Real-Time KPI Stats -->
+      <div class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 1.5rem;">
+        <div class="metric-card">
+          <div class="metric-icon" style="background: rgba(0, 242, 255, 0.12); color: var(--hud-cyan);"><i class="fa-solid fa-folder-open"></i></div>
+          <div class="metric-info">
+            <span class="metric-label">Total Assets</span>
+            <h3 class="metric-value" id="trainer-lib-total">0</h3>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon" style="background: rgba(124, 242, 154, 0.12); color: #7cf29a;"><i class="fa-solid fa-circle-check"></i></div>
+          <div class="metric-info">
+            <span class="metric-label">Published to Trainees</span>
+            <h3 class="metric-value" id="trainer-lib-published">0</h3>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon" style="background: rgba(255, 209, 102, 0.12); color: #ffd166;"><i class="fa-solid fa-pen-ruler"></i></div>
+          <div class="metric-info">
+            <span class="metric-label">Drafts in Prep</span>
+            <h3 class="metric-value" id="trainer-lib-drafts">0</h3>
+          </div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-icon" style="background: rgba(199, 125, 255, 0.12); color: var(--hud-purple);"><i class="fa-solid fa-eye"></i></div>
+          <div class="metric-info">
+            <span class="metric-label">Trainee Completions</span>
+            <h3 class="metric-value" id="trainer-lib-views">0</h3>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter and Search Bar -->
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:1.5rem;">
+        <div class="resource-type-filters">
+          <button class="filter-pill active" onclick="filterTrainerResources('all', this)">All Formats</button>
+          <button class="filter-pill" onclick="filterTrainerResources('video', this)"><i class="fa-solid fa-video"></i> Videos</button>
+          <button class="filter-pill" onclick="filterTrainerResources('slides', this)"><i class="fa-solid fa-file-powerpoint"></i> Slides</button>
+          <button class="filter-pill" onclick="filterTrainerResources('document', this)"><i class="fa-solid fa-file-pdf"></i> Documents</button>
+          <button class="filter-pill" onclick="filterTrainerResources('link', this)"><i class="fa-solid fa-link"></i> Links</button>
+        </div>
+        <div style="min-width:240px; flex:1; max-width:320px;">
+          <input type="text" class="auth-input" placeholder="Search your library..." oninput="handleTrainerResourceSearch(this.value)" style="padding:8px 14px; font-size:0.85rem;">
+        </div>
+      </div>
+
+      <div id="trainer-resources-list" class="cards-grid">
+        <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i> Loading your library items...</div>
+      </div>
+    </section>
+
+
+    <!-- ======================================================== -->
+    <!-- 4. ADMIN VIEWS                                           -->
+    <!-- ======================================================== -->
+
+    <!-- 4.1 Admin User Approvals Queue & Directory -->
+    <section id="view-admin-users" class="app-view">
+      <div class="view-header-bar">
+        <div>
+          <h2><i class="fa-solid fa-user-shield"></i> User Governance & Approval Gate</h2>
+          <p class="text-muted">Review pending self-registrations, enforce role authorizations, and audit user account actions.</p>
+        </div>
+        <div class="user-filter-pills">
+          <button class="filter-pill active" id="pill-pending" onclick="filterAdminUsers('pending', this)">Pending Approvals (<span id="admin-pending-count">0</span>)</button>
+          <button class="filter-pill" id="pill-active" onclick="filterAdminUsers('active', this)">Active Users</button>
+          <button class="filter-pill" id="pill-all" onclick="filterAdminUsers('all', this)">All Accounts</button>
+        </div>
+      </div>
+
+      <!-- Pending Approval Banner -->
+      <div id="admin-pending-alert" class="status-alert warning" style="display:none; margin-bottom: 1.5rem;">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>There are pending user registrations awaiting your approval. Unapproved users cannot log in.</span>
+      </div>
+
+      <!-- Users Directory Table -->
+      <div class="glass-panel" style="padding: 1.5rem;">
+        <div class="table-responsive">
+          <table class="data-table" id="admin-users-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Role</th>
+                <th>Department</th>
+                <th>Status</th>
+                <th>Registered</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-users-tbody">
+              <tr><td colspan="6" class="text-center">Loading user records...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4.2 Admin 5 Real-Time Dashboards -->
+    <section id="view-admin-dashboards" class="app-view">
+      <div class="view-header-bar">
+        <div>
+          <h2><i class="fa-solid fa-chart-pie"></i> Executive L&D Analytics Dashboards</h2>
+          <p class="text-muted">Real-time learning metrics and performance data computed directly from live records.</p>
+        </div>
+        <!-- Dashboard Switcher -->
+        <div class="filter-pills" id="admin-dashboard-tabs">
+          <button class="filter-pill active" onclick="switchAdminDashboard('courses', this)">1. Courses</button>
+          <button class="filter-pill" onclick="switchAdminDashboard('enrollments', this)">2. Enrollments</button>
+          <button class="filter-pill" onclick="switchAdminDashboard('certifications', this)">3. Certifications</button>
+          <button class="filter-pill" onclick="switchAdminDashboard('assessments', this)">4. Assessments</button>
+          <button class="filter-pill" onclick="switchAdminDashboard('participation', this)">5. Participation</button>
+        </div>
+      </div>
+
+      <!-- Dynamic Dashboard Canvas Container -->
+      <div id="admin-dashboard-display" class="dashboard-body">
+        <div class="empty-state">Loading dashboard analytics...</div>
+      </div>
+    </section>
+
+    <!-- 4.3 Admin Homepage Publisher -->
+    <section id="view-admin-publisher" class="app-view">
+      <div class="view-header-bar">
+        <div>
+          <h2><i class="fa-solid fa-bullhorn" style="color:var(--hud-gold);"></i> Announcement Publisher</h2>
+          <p class="text-muted">Post real-time announcements visible to all trainers and trainees on their home screen.</p>
+        </div>
+        <button class="btn-primary" onclick="openCreatePostModal()" id="btn-new-announcement">
+          <i class="fa-solid fa-plus"></i> Post New Announcement
+        </button>
+      </div>
+
+      <!-- Live published announcements list -->
+      <div class="glass-panel" style="padding:1.5rem; margin-bottom:1.5rem;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+          <div style="font-weight:700; color:#fff; font-size:1rem;">
+            <i class="fa-solid fa-tower-broadcast" style="color:var(--hud-cyan); margin-right:8px;"></i>
+            Live Broadcasts
+          </div>
+          <button class="btn-outline-sm" onclick="loadAdminPosts()" style="font-size:0.78rem;">
+            <i class="fa-solid fa-rotate"></i> Refresh
+          </button>
+        </div>
+        <div id="admin-posts-list">
+          <div class="empty-state">Loading announcements...</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4.4 Admin Competency Mapping Matrix -->
+    <section id="view-admin-competency" class="app-view">
+      <div class="view-header-bar">
+        <div>
+          <h2><i class="fa-solid fa-diagram-project"></i> Organizational Competency Mapping Matrix</h2>
+          <p class="text-muted">Live mapping connecting technical taxonomy subjects with qualified trainers, experience, and course load.</p>
+        </div>
+      </div>
+
+      <div class="glass-panel" style="padding: 1.5rem;">
+        <div id="competency-matrix-container">
+          <div class="empty-state">Computing competency matrix...</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- ======================================================== -->
+  <!-- MODALS & OVERLAYS                                        -->
+  <!-- ======================================================== -->
+
+  <!-- 1. Course Details & Syllabus Modal -->
+  <div id="modal-course-detail" class="modal-overlay" style="display:none;">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <h3 id="modal-course-title">Course Title</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-course-detail')">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-course-body">
+        <!-- Injected syllabus, resources, questionnaires, and enrollment action -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Multimedia Resource Player Modal (Video / Slide / PDF) -->
+  <div id="modal-resource-viewer" class="modal-overlay" style="display:none;">
+    <div class="modal-card modal-xl">
+      <div class="modal-header">
+        <h3 id="modal-resource-title">Resource Title</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-resource-viewer')">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-resource-body">
+        <!-- Video stream player, PDF/Slide viewer -->
+      </div>
+      <div class="modal-footer" id="modal-resource-footer">
+        <button class="btn-success" id="btn-mark-resource-complete" onclick="markCurrentResourceCompleted()">
+          <i class="fa-solid fa-check"></i> Mark as Completed (+Progress)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. MCQ Assessment Exam Arena Modal (With Countdown Timer) -->
+  <div id="modal-exam-arena" class="modal-overlay" style="display:none;">
+    <div class="modal-card modal-lg">
+      <div class="modal-header exam-header">
+        <div>
+          <h3 id="exam-title">Assessment</h3>
+          <span id="exam-subject-badge" class="badge badge-cyan">Subject</span>
+        </div>
+        <div class="exam-timer" id="exam-timer-container">
+          <i class="fa-solid fa-stopwatch fa-spin"></i> Time Left: <strong id="exam-timer-clock">00:00</strong>
+        </div>
+      </div>
+      <div class="modal-body" id="exam-questions-container">
+        <!-- Question list rendered here -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn-outline" onclick="closeExamConfirm()">Cancel Attempt</button>
+        <button class="btn-primary" id="btn-submit-exam" onclick="submitAssessmentExam()">
+          <i class="fa-solid fa-paper-plane"></i> Submit Answers for Grading
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Assessment Result & Certificate Modal -->
+  <div id="modal-exam-result" class="modal-overlay" style="display:none;">
+    <div class="modal-card modal-md">
+      <div class="modal-header">
+        <h3>Assessment Results</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-exam-result')">&times;</button>
+      </div>
+      <div class="modal-body" id="exam-result-body" style="text-align: center;">
+        <!-- Injected score breakdown and certificate download if passed -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Course Feedback Modal -->
+  <div id="modal-feedback" class="modal-overlay" style="display:none;">
+    <div class="modal-card modal-md">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-star" style="color:var(--hud-gold);"></i> Course & Trainer Feedback</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-feedback')">&times;</button>
+      </div>
+      <form onsubmit="handleFeedbackSubmit(event)">
+        <input type="hidden" id="feedback-course-id">
+        <input type="hidden" id="feedback-trainer-id">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Overall Rating</label>
+            <div class="star-rating-selector" id="feedback-stars">
+              <i class="fa-solid fa-star active" data-rating="1" onclick="setRating(1)"></i>
+              <i class="fa-solid fa-star active" data-rating="2" onclick="setRating(2)"></i>
+              <i class="fa-solid fa-star active" data-rating="3" onclick="setRating(3)"></i>
+              <i class="fa-solid fa-star active" data-rating="4" onclick="setRating(4)"></i>
+              <i class="fa-solid fa-star active" data-rating="5" onclick="setRating(5)"></i>
+            </div>
+            <input type="hidden" id="feedback-rating-val" value="5">
+          </div>
+          <div class="form-group">
+            <label for="feedback-comments">Your Feedback & Takeaways</label>
+            <textarea id="feedback-comments" class="auth-input" rows="4" placeholder="Share your experience with the curriculum, clarity of instruction, and practical relevance..." required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-outline" onclick="closeModal('modal-feedback')">Cancel</button>
+          <button type="submit" class="btn-primary">Submit Feedback</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 6. Trainer: Create Questionnaire Modal -->
+  <div id="modal-create-questionnaire" class="modal-overlay" style="display:none;">
+    <div class="modal-card modal-xl">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-pen-nib"></i> Author New Assessment Questionnaire</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-create-questionnaire')">&times;</button>
+      </div>
+      <form onsubmit="handleCreateQuestionnaireSubmit(event)">
+        <div class="modal-body">
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="quest-title">Assessment Title</label>
+              <input type="text" id="quest-title" class="auth-input" placeholder="e.g. Microservices & API Design Quiz" required>
+            </div>
+            <div class="form-group">
+              <label for="quest-subject">Subject Taxonomy</label>
+              <select id="quest-subject" class="auth-input" required>
+                <!-- Populated with subjects -->
+              </select>
+            </div>
+          </div>
+          <div class="grid-3">
+            <div class="form-group">
+              <label for="quest-deadline">Submission Deadline</label>
+              <input type="datetime-local" id="quest-deadline" class="auth-input" required>
+            </div>
+            <div class="form-group">
+              <label for="quest-duration">Timer Duration (Minutes)</label>
+              <input type="number" id="quest-duration" class="auth-input" value="20" min="5" max="180" required>
+            </div>
+            <div class="form-group">
+              <label for="quest-threshold">Passing Score (%)</label>
+              <input type="number" id="quest-threshold" class="auth-input" value="75" min="50" max="100" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="quest-description">Instructions for Trainees</label>
+            <textarea id="quest-description" class="auth-input" rows="2" placeholder="Explain the focus areas and ground rules for this quiz..."></textarea>
+          </div>
+
+          <!-- Questions Studio Dynamic Builder -->
+          <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem; margin-top: 1rem;">
+            <div class="section-header-flex">
+              <h4>Questions List (<span id="quest-count-label">1</span>)</h4>
+              <button type="button" class="btn-outline-sm" onclick="addQuestionItem()"><i class="fa-solid fa-plus"></i> Add Question</button>
+            </div>
+            <div id="quest-builder-items" class="questions-builder-stack">
+              <!-- Initial Question Item -->
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-outline" onclick="closeModal('modal-create-questionnaire')">Cancel</button>
+          <button type="submit" class="btn-primary">Publish Assessment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 7. Content Library Upload Modal -->
+  <div id="modal-upload-resource" class="modal-overlay" style="display:none;">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-cloud-arrow-up" style="color:var(--hud-cyan);"></i> Publish Learning Resource</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-upload-resource')">&times;</button>
+      </div>
+      <form onsubmit="handleUploadResourceSubmit(event)">
+        <div class="modal-body">
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="res-title">Resource Title <span style="color:var(--hud-red);">*</span></label>
+              <input type="text" id="res-title" class="auth-input" placeholder="e.g. Node.js Streams & Event-Driven Architecture" required>
+            </div>
+            <div class="form-group">
+              <label for="res-type">Resource Format <span style="color:var(--hud-red);">*</span></label>
+              <select id="res-type" class="auth-input" onchange="toggleResourceFormatFields(this.value)">
+                <option value="video">🎥 Video Lecture (MP4 / WebM / Embed URL)</option>
+                <option value="slides">📊 Presentation Slides (PDF / PPTX / Slide Deck)</option>
+                <option value="document">📄 Technical Document / Code Guide (PDF / DOCX / Markdown)</option>
+                <option value="link">🔗 Reference Link / External Documentation</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid-3">
+            <div class="form-group">
+              <label for="res-subject">Subject Domain <span style="color:var(--hud-red);">*</span></label>
+              <select id="res-subject" class="auth-input" required></select>
+            </div>
+            <div class="form-group">
+              <label for="res-course-link">Link to Course</label>
+              <select id="res-course-link" class="auth-input">
+                <option value="">General Subject Library</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="res-status">Publication Status</label>
+              <select id="res-status" class="auth-input">
+                <option value="published">🚀 Published (Live for Trainees)</option>
+                <option value="draft">📝 Save as Draft (Hidden from Trainees)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- File Upload Attachment Option -->
+          <div class="form-group" style="margin-top:0.5rem; padding:1.2rem; background:rgba(255,255,255,0.03); border:1px dashed rgba(255,255,255,0.18); border-radius:14px;">
+            <label style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+              <span><i class="fa-solid fa-paperclip" style="color:var(--hud-cyan);"></i> Attach Local File (Slides, PDF, Document, Video, Notes)</span>
+              <span style="font-size:0.75rem; color:rgba(255,255,255,0.5);">Max 15MB</span>
+            </label>
+            <input type="file" id="res-file-upload" class="auth-input" onchange="handleResourceFileSelected(event)" accept=".pdf,.doc,.docx,.ppt,.pptx,.mp4,.webm,.zip,.txt,.png,.jpg,.jpeg">
+            <div id="res-file-info" style="display:none; margin-top:8px; font-size:0.8rem; color:#7cf29a;">
+              <i class="fa-solid fa-file-circle-check"></i> <span id="res-file-info-text"></span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="res-file-url"><i class="fa-solid fa-link"></i> Or External Link / Video Stream URL (YouTube, Vimeo, Google Drive, Loom, GitHub)</label>
+            <input type="url" id="res-file-url" class="auth-input" placeholder="https://youtube.com/watch?v=... or https://drive.google.com/...">
+          </div>
+          <div class="form-group">
+            <label for="res-description">Summary Description / Outline</label>
+            <textarea id="res-description" class="auth-input" rows="3" placeholder="Provide learning objectives, prerequisites, or topics covered..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-outline" onclick="closeModal('modal-upload-resource')">Cancel</button>
+          <button type="submit" class="btn-primary" id="res-upload-submit-btn"><i class="fa-solid fa-cloud-arrow-up"></i> Upload & Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 7.1 Content Library Edit Modal -->
+  <div id="modal-edit-resource" class="modal-overlay" style="display:none;">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-pen-to-square" style="color:var(--hud-cyan);"></i> Edit Learning Resource</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-edit-resource')">&times;</button>
+      </div>
+      <form onsubmit="handleEditResourceSubmit(event)">
+        <input type="hidden" id="edit-res-id">
+        <div class="modal-body">
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="edit-res-title">Resource Title</label>
+              <input type="text" id="edit-res-title" class="auth-input" required>
+            </div>
+            <div class="form-group">
+              <label for="edit-res-status">Publication Status</label>
+              <select id="edit-res-status" class="auth-input">
+                <option value="published">🚀 Published (Visible to Trainees)</option>
+                <option value="draft">📝 Draft (Hidden from Trainees)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="edit-res-file-url">Resource URL / Video Stream Link</label>
+            <input type="url" id="edit-res-file-url" class="auth-input">
+          </div>
+          <div class="form-group">
+            <label for="edit-res-description">Summary Description</label>
+            <textarea id="edit-res-description" class="auth-input" rows="3"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-outline" onclick="closeModal('modal-edit-resource')">Cancel</button>
+          <button type="submit" class="btn-primary"><i class="fa-solid fa-save"></i> Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 8. Admin: Create Announcement Modal -->
+  <div id="modal-create-post" class="modal-overlay" style="display:none;">
+    <div class="modal-card modal-md">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-bullhorn" style="color:var(--hud-gold);"></i> Post New Announcement</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-create-post')">&times;</button>
+      </div>
+      <form onsubmit="handleCreatePostSubmit(event)">
+        <div class="modal-body">
+
+          <div class="form-group">
+            <label for="post-title"><i class="fa-solid fa-heading" style="color:var(--hud-cyan); margin-right:6px;"></i>Announcement Title *</label>
+            <input type="text" id="post-title" class="auth-input" placeholder="e.g. System Maintenance on Saturday" required maxlength="200">
+          </div>
+
+          <div class="form-group">
+            <label for="post-content"><i class="fa-solid fa-align-left" style="color:var(--hud-cyan); margin-right:6px;"></i>Message *</label>
+            <textarea id="post-content" class="auth-input" rows="5" placeholder="Write your announcement here. Be clear and concise." required maxlength="2000"></textarea>
+            <div style="text-align:right; font-size:0.75rem; color:rgba(255,255,255,0.4); margin-top:4px;">Max 2000 characters</div>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="post-target-role"><i class="fa-solid fa-users" style="color:var(--hud-cyan); margin-right:6px;"></i>Audience</label>
+              <select id="post-target-role" class="auth-input">
+                <option value="">Everyone (All Roles)</option>
+                <option value="trainee">Trainees Only</option>
+                <option value="trainer">Trainers Only</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="post-priority"><i class="fa-solid fa-flag" style="color:var(--hud-cyan); margin-right:6px;"></i>Priority</label>
+              <select id="post-priority" class="auth-input">
+                <option value="normal">Normal</option>
+                <option value="high">🔴 High — Pin to Top</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="post-expires-at"><i class="fa-solid fa-calendar-xmark" style="color:var(--hud-cyan); margin-right:6px;"></i>Auto-Expire (optional)</label>
+            <input type="datetime-local" id="post-expires-at" class="auth-input">
+            <div style="font-size:0.75rem; color:rgba(255,255,255,0.4); margin-top:4px;">Leave blank to keep indefinitely</div>
+          </div>
+
+          <div id="announcement-post-status" style="display:none; padding:10px 14px; border-radius:10px; font-size:0.88rem; margin-top:4px;"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-outline" onclick="closeModal('modal-create-post')">Cancel</button>
+          <button type="submit" class="btn-primary" id="btn-publish-announcement">
+            <i class="fa-solid fa-paper-plane"></i> Post Announcement
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 9. Profile Skill / Qualification / Experience Modals -->
+  <div id="modal-add-skill" class="modal-overlay" style="display:none;">
+    <div class="modal-card modal-sm">
+      <div class="modal-header">
+        <h3>Add Technical Skill</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-add-skill')">&times;</button>
+      </div>
+      <form onsubmit="handleAddSkillSubmit(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="skill-name">Skill Name</label>
+            <input type="text" id="skill-name" class="auth-input" placeholder="e.g. PostgreSQL, React, Docker" required>
+          </div>
+          <div class="form-group">
+            <label for="skill-level">Proficiency Level</label>
+            <select id="skill-level" class="auth-input">
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate" selected>Intermediate</option>
+              <option value="Advanced">Advanced</option>
+              <option value="Expert">Expert</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-outline" onclick="closeModal('modal-add-skill')">Cancel</button>
+          <button type="submit" class="btn-primary">Save Skill</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modal-add-qualification" class="modal-overlay" style="display:none;">
+    <div class="modal-card modal-md">
+      <div class="modal-header">
+        <h3>Add Qualification</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-add-qualification')">&times;</button>
+      </div>
+      <form onsubmit="handleAddQualificationSubmit(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="qual-degree">Degree / Diploma / Program</label>
+            <input type="text" id="qual-degree" class="auth-input" placeholder="e.g. B.Tech Computer Science" required>
+          </div>
+          <div class="form-group">
+            <label for="qual-institution">University / Institution</label>
+            <input type="text" id="qual-institution" class="auth-input" placeholder="e.g. National Institute of Technology" required>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="qual-year">Graduation Year</label>
+              <input type="text" id="qual-year" class="auth-input" placeholder="2025">
+            </div>
+            <div class="form-group">
+              <label for="qual-grade">Grade / GPA (Optional)</label>
+              <input type="text" id="qual-grade" class="auth-input" placeholder="e.g. 8.8 / 10">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-outline" onclick="closeModal('modal-add-qualification')">Cancel</button>
+          <button type="submit" class="btn-primary">Save Qualification</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modal-add-experience" class="modal-overlay" style="display:none;">
+    <div class="modal-card modal-md">
+      <div class="modal-header">
+        <h3>Add Experience / Project</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-add-experience')">&times;</button>
+      </div>
+      <form onsubmit="handleAddExperienceSubmit(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="exp-company">Company / Organization</label>
+            <input type="text" id="exp-company" class="auth-input" placeholder="e.g. Tech Innovations Corp" required>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="exp-role">Role / Title</label>
+              <input type="text" id="exp-role" class="auth-input" placeholder="e.g. Cloud Engineer" required>
+            </div>
+            <div class="form-group">
+              <label for="exp-duration">Duration</label>
+              <input type="text" id="exp-duration" class="auth-input" placeholder="e.g. Jan 2024 - Present">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="exp-desc">Responsibilities & Key Deliverables</label>
+            <textarea id="exp-desc" class="auth-input" rows="3" placeholder="Key achievements and technologies used..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-outline" onclick="closeModal('modal-add-experience')">Cancel</button>
+          <button type="submit" class="btn-primary">Save Experience</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="modal-add-certificate" class="modal-overlay" style="display:none;">
+    <div class="modal-card modal-md">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-award" style="color:#7cf29a;"></i> Add Certificate / Credential</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-add-certificate')">&times;</button>
+      </div>
+      <form onsubmit="handleAddCertificateSubmit(event)">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="cert-title">Certificate / Credential Title</label>
+            <input type="text" id="cert-title" class="auth-input" placeholder="e.g. AWS Certified Solutions Architect, Full-Stack Mastery" required>
+          </div>
+          <div class="form-group">
+            <label for="cert-issuer">Issuing Organization / Authority</label>
+            <input type="text" id="cert-issuer" class="auth-input" placeholder="e.g. Amazon Web Services, Coursera, EduPeers" required>
+          </div>
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="cert-date">Issue Date</label>
+              <input type="date" id="cert-date" class="auth-input">
+            </div>
+            <div class="form-group">
+              <label for="cert-code">Credential ID / Verification Code</label>
+              <input type="text" id="cert-code" class="auth-input" placeholder="e.g. AWS-CERT-884920">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-outline" onclick="closeModal('modal-add-certificate')">Cancel</button>
+          <button type="submit" class="btn-primary">Save Certificate</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 10. Admin: Comprehensive User Profile & Review Modal -->
+  <div id="modal-user-detail" class="modal-overlay" style="display:none;">
+    <div class="modal-card modal-lg">
+      <div class="modal-header">
+        <h3 id="modal-user-detail-title"><i class="fa-solid fa-id-card"></i> User Profile & Registration Details</h3>
+        <button class="modal-close-btn" onclick="closeModal('modal-user-detail')">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-user-detail-body">
+        <!-- Dynamically injected user details -->
+      </div>
+      <div class="modal-footer" id="modal-user-detail-footer">
+        <!-- Dynamic actions like approve, reject, change role -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MOBILE BOTTOM NAVIGATION & ACTIONS                      -->
+  <!-- ======================================================== -->
+  
+
+
+  <!-- Native App Mobile Bottom Tab Bar -->
+  <nav class="mobile-bottom-nav" id="mobile-bottom-nav" aria-label="Mobile Navigation">
+    <!-- Populated dynamically by app.js based on active role -->
+  </nav>
+
+  <!-- Mobile Quick Tools Floating Bottom Sheet -->
+  <div class="mobile-tools-sheet" id="mobile-tools-sheet" onclick="if(event.target === this) closeMobileToolsSheet()">
+    <div class="mobile-tools-sheet-content">
+      <div class="mobile-tools-handle"></div>
+      <div class="mobile-tools-header">
+        <h3><i class="fa-solid fa-shapes" style="color:var(--hud-cyan);"></i> Quick Tools</h3>
+        <button class="modal-close-btn" onclick="closeMobileToolsSheet()" style="font-size:1.4rem;">&times;</button>
+      </div>
+      <div class="mobile-tools-grid">
+        <a href="ai-tutor.html" class="mobile-tool-btn">
+          <i class="fa-solid fa-robot" style="color:var(--hud-purple);"></i>
+          <span>AI Tutor</span>
+        </a>
+        <a href="notes.html" class="mobile-tool-btn">
+          <i class="fa-solid fa-note-sticky" style="color:var(--hud-gold);"></i>
+          <span>Notes</span>
+        </a>
+        <a href="mind-games.html" class="mobile-tool-btn">
+          <i class="fa-solid fa-brain" style="color:#ff758f;"></i>
+          <span>Games</span>
+        </a>
+        <a href="peers-connect.html" class="mobile-tool-btn">
+          <i class="fa-solid fa-users" style="color:#7cf29a;"></i>
+          <span>Connect</span>
+        </a>
+        <a href="edu-groups.html" class="mobile-tool-btn">
+          <i class="fa-solid fa-user-group" style="color:var(--hud-cyan);"></i>
+          <span>Groups</span>
+        </a>
+        <a href="ai-mark-analysis.html" class="mobile-tool-btn">
+          <i class="fa-solid fa-chart-line" style="color:#ffa200;"></i>
+          <span>Analysis</span>
+        </a>
+        <a href="javascript:void(0)" class="mobile-tool-btn" onclick="closeMobileToolsSheet(); switchNavTab('profile');">
+          <i class="fa-solid fa-id-card" style="color:#c77dff;"></i>
+          <span>Profile</span>
+        </a>
+        <a href="javascript:void(0)" class="mobile-tool-btn" onclick="toggleNotificationsDrawer(); closeMobileToolsSheet();">
+          <i class="fa-solid fa-bell" style="color:#ffd166;"></i>
+          <span>Alerts</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Fullscreen Search Modal -->
+  <div class="mobile-search-modal" id="mobile-search-modal">
+    <div class="mobile-search-bar">
+      <i class="fa-solid fa-magnifying-glass" style="color:rgba(255,255,255,0.4);"></i>
+      <input type="text" id="mobile-search-input" placeholder="Search courses, assessments, trainers..." oninput="handleMobileSearch(this.value)" autocomplete="off">
+      <button class="mobile-search-close" onclick="closeMobileSearch()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="mobile-search-results" id="mobile-search-results">
+      <div style="text-align:center; padding:2rem; color:rgba(255,255,255,0.4); font-size:0.85rem;">
+        Type to search courses, modules, resources and more...
+      </div>
+    </div>
+  </div>
+
+  <!-- Main JavaScript App Controller -->
+  <script src="app.js?v=2026_trainee_symbol_v10"></script>
+</body>
+
+</html>

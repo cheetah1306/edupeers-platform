@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Notes Area - EduPeers</title>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(r => r.forEach(reg => reg.unregister()));
+      }
+      if (window.caches) {
+        caches.keys().then(k => k.forEach(key => caches.delete(key)));
+      }
+    </script>
+    <link rel="stylesheet" href="index.css?v=2026_refresh">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="logo.png">
+    <style>
+        :root {
+            --sidebar-width: 250px;
+        }
+
+        .notes-layout {
+            display: flex;
+            height: calc(100vh - 80px); /* Subtracting nav height */
+            margin-top: 10px;
+            gap: 1.5rem;
+            padding: 0 1.5rem 1.5rem 1.5rem;
+        }
+
+        /* Sidebar for Subjects */
+        .notes-sidebar {
+            width: var(--sidebar-width);
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .subjects-panel {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .subject-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 0.8rem 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .subject-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        .subject-item.active {
+            background: rgba(255, 51, 102, 0.1);
+            border-color: var(--hud-red);
+            font-weight: 600;
+        }
+
+        .subject-item .subject-name {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            min-width: 0;
+        }
+
+        .subject-item span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .subject-controls {
+            display: flex;
+            gap: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .subject-item:hover .subject-controls {
+            opacity: 1;
+        }
+
+        .subject-controls i {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.4);
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .subject-controls i:hover {
+            color: #fff;
+        }
+
+        /* Main Content Area for Notes */
+        .notes-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            min-width: 0;
+        }
+
+        .notes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 0.5rem;
+        }
+
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.25rem;
+            overflow-y: auto;
+            flex: 1;
+            padding-bottom: 2rem;
+        }
+
+        .note-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .note-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .note-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .note-preview {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.6);
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.5;
+        }
+
+        .note-meta {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Modal Overlays improved */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #0f141d;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 600px;
+            padding: 2.5rem;
+            position: relative;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            color: #fff;
+            margin-bottom: 2rem;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 0.85rem 1.2rem;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s ease;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+        }
+
+        .form-input option {
+            background-color: #1a1f2b;
+            color: #fff;
+            padding: 10px;
+        }
+
+        .form-input:focus {
+            border-color: var(--hud-red);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        textarea.form-input {
+            resize: none;
+            height: 200px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        /* Float Action Button */
+        .fab {
+            position: fixed;
+            bottom: 2.5rem;
+            right: 2.5rem;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--hud-red);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(255, 51, 102, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 900;
+            border: none;
+        }
+
+        .fab:hover {
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 15px 40px rgba(255, 51, 102, 0.6);
+        }
+
+        /* Header Navigation Overlay (Copied logic from app.js) */
+        nav {
+            padding: 1.25rem 1.5rem;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 900px) {
+            .notes-layout {
+                flex-direction: column;
+                height: auto;
+                overflow: visible;
+            }
+            .notes-sidebar {
+                width: 100%;
+                max-height: 200px;
+            }
+            .subjects-panel {
+                flex-direction: row;
+                overflow-x: auto;
+                padding-bottom: 0.5rem;
+            }
+            .subject-item {
+                flex-shrink: 0;
+                min-width: 140px;
+            }
+        }
+
+        /* Ambient HUD Glows */
+        .bg-orbs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+        .orb {
+            position: absolute;
+            width: 40vw;
+            height: 40vw;
+            border-radius: 50%;
+            filter: blur(140px);
+            opacity: 0.15;
+            pointer-events: none;
+        }
+        .orb-1 { top: -20%; left: -20%; background: #0084ff; }
+        .orb-2 { bottom: -20%; right: -20%; background: var(--hud-red); }
+        .orb-3 { top: 40%; right: -15%; width: 25vw; height: 25vw; background: #6c5ce7; opacity: 0.1; }
+        .orb-4 { bottom: 5%; left: -10%; width: 22vw; height: 22vw; background: #0984e3; opacity: 0.1; }
+    </style>
+</head>
+<body style="min-height: 100vh; background: #0a0e17; color: white;">
+    
+    <!-- Ambient background -->
+    <div class="bg-orbs" aria-hidden="true">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <div class="orb orb-4"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav>
+        <a href="index.html" class="brand" style="text-decoration: none;">
+            <i class="fa-solid fa-chevron-left" style="font-size: 1rem; color: white;"></i>
+            <img src="logo.png" alt="EduPeers Logo">
+        </a>
+        <div style="display: flex; align-items: center; gap: 1.2rem;">
+            <div class="user-profile">
+                <div class="avatar" id="topbar-avatar">A</div>
+                <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                    <span class="user-name" id="topbar-user-name" style="line-height:1.2;">Akshay</span>
+                </div>
+                <i class="fa-solid fa-gear" style="font-size: 0.9rem; color: var(--text-muted); margin-left: 0.5rem;"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- UI Overlay for Notes -->
+    <main class="notes-layout">
+        
+        <!-- SIDEBAR -->
+        <aside class="notes-sidebar">
+            <div class="glass-panel" style="padding: 1.25rem; flex: 1; display: flex; flex-direction: column; gap: 1rem;">
+                <div class="panel-title" style="font-size: 1rem; margin-bottom: 0.5rem;">
+                    <i class="fa-solid fa-folder"></i> Subjects
+                </div>
+                
+                <div class="subjects-panel" id="subjects-container">
+                    <!-- Subjects injected via JS -->
+                </div>
+
+                <button class="auth-btn auth-btn-secondary" id="btn-add-subject" style="margin-top: auto; padding: 0.6rem;">
+                    <i class="fa-solid fa-plus"></i> Add Subject
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN AREA -->
+        <section class="notes-main">
+            <div class="notes-header">
+                <div>
+                    <h2 id="current-subject-title" style="font-size: 1.8rem; font-family: 'Playfair Display', serif;">Study Notes</h2>
+                    <p id="current-subject-desc" style="color: rgba(255,255,255,0.5); font-size: 0.9rem;">Select a subject to view your specialized notes.</p>
+                </div>
+                <div id="active-subject-actions" style="display: none;">
+                    <button class="auth-btn" id="btn-new-note" style="padding: 0.6rem 1.2rem; margin: 0;">
+                        <i class="fa-solid fa-pen-nib"></i> New Note
+                    </button>
+                </div>
+            </div>
+
+            <div class="notes-grid" id="notes-grid">
+                <!-- Notes injected via JS -->
+            </div>
+        </section>
+    </main>
+
+    <!-- FAB for quick addition (only if subject selected) -->
+    <button class="fab" id="quick-fab" style="display: none;" title="Create new note">
+        <i class="fa-solid fa-plus"></i>
+    </button>
+
+    <!-- SUBJECT MODAL -->
+    <div class="modal" id="modal-subject">
+        <div class="modal-content">
+            <h3 class="modal-title" id="subject-modal-title">Create New Subject</h3>
+            <div class="modal-form">
+                <div class="form-group">
+                    <label>Subject Name</label>
+                    <input type="text" id="subject-name-input" class="form-input" placeholder="e.g. Physics, History, AI">
+                    <input type="hidden" id="edit-subject-id">
+                </div>
+                <div class="modal-actions">
+                    <button class="auth-btn auth-btn-secondary" onclick="closeModal('modal-subject')">Cancel</button>
+                    <button class="auth-btn" id="btn-save-subject">Save Subject</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTE MODAL -->
+    <div class="modal" id="modal-note">
+        <div class="modal-content" style="max-width: 800px;">
+            <h3 class="modal-title" id="note-modal-title">Write New Note</h3>
+            <div class="modal-form">
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" id="note-title-input" class="form-input" placeholder="Give your note a title...">
+                </div>
+                <div class="form-group">
+                    <label>Note Content</label>
+                    <textarea id="note-content-input" class="form-input" placeholder="Start writing something legendary..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Priority</label>
+                    <select id="note-priority-input" class="form-input">
+                        <option value="0">Normal</option>
+                        <option value="1">High Priority</option>
+                        <option value="2">Urgent</option>
+                    </select>
+                </div>
+                <input type="hidden" id="edit-note-id">
+                <div class="modal-actions">
+                    <button class="auth-btn auth-btn-secondary" onclick="closeModal('modal-note')">Cancel</button>
+                    <button class="auth-btn" id="btn-save-note">Save Note</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- UI Toast for Feedback -->
+    <div id="ui-toast" style="position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%); background: rgba(31, 43, 73, 0.9); color: #fff; padding: 0.75rem 1.25rem; border-radius: 99px; font-size: 0.9rem; font-weight: 600; z-index: 9999; box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4); opacity: 0; transition: opacity 0.3s ease; pointer-events: none;">
+        Sample Message
+    </div>
+
+    <script src="notes.js?v=2026_refresh"></script>
+    <script src="snow.js?v=2026_refresh"></script>
+    <script src="parallax.js?v=2026_refresh"></script>
+</body>
+</html>

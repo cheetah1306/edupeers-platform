@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>AI Tutor - EduPeers</title>
+  <meta name="description" content="EduPeers - AI Academic Tutor.">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(r => r.forEach(reg => reg.unregister()));
+    }
+    if (window.caches) {
+      caches.keys().then(k => k.forEach(key => caches.delete(key)));
+    }
+  </script>
+  <link rel="stylesheet" href="index.css?v=2026_refresh">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Markdown Parser -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- Math Formulas (MathJax) -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      }
+    };
+  </script>
+
+  <!-- PWA & Mobile Optimization tags -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0a0e17">
+  <link rel="apple-touch-icon" href="logo.png">
+  <link rel="icon" type="image/png" href="logo.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <style>
+      /* Voice Status Pill Styles */
+      .voice-status-pill {
+        display: none;
+        align-items: center;
+        gap: 0.6rem;
+        background: rgba(255, 71, 87, 0.15);
+        border: 1px solid rgba(255, 71, 87, 0.3);
+        padding: 5px 14px;
+        border-radius: 99px;
+        color: #ff4757;
+        font-size: 0.7rem;
+        font-weight: bold;
+        letter-spacing: 1.2px;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 4px 15px rgba(255, 71, 87, 0.2);
+        width: fit-content;
+        margin: 0 auto 0.5rem 1rem;
+        animation: statusSlideInUp 0.3s ease-out;
+      }
+
+      .voice-status-pill.active {
+        display: flex;
+      }
+
+      .voice-wave-mini {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        height: 10px;
+      }
+
+      .wave-bar-mini {
+        width: 2px;
+        height: 100%;
+        background: #ff4757;
+        border-radius: 1px;
+        animation: waveHeightMini 0.6s ease-in-out infinite alternate;
+      }
+
+      .wave-bar-mini:nth-child(2) { animation-delay: 0.1s; }
+      .wave-bar-mini:nth-child(3) { animation-delay: 0.2s; }
+
+      @keyframes waveHeightMini {
+        from { height: 4px; }
+        to { height: 12px; }
+      }
+
+      @keyframes statusSlideInUp {
+        from { transform: translateY(10px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+
+      /* ── Mic Button Base ── */
+      .mic-btn {
+        position: relative;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--hud-cyan, #00f3ff);
+        font-size: 1.3rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.3s ease, border-color 0.3s ease,
+                    color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+        flex-shrink: 0;
+        overflow: visible;
+      }
+
+      /* Idle hover */
+      .mic-btn:not(.recording):hover {
+        background: rgba(0, 243, 255, 0.08);
+        border-color: rgba(0, 243, 255, 0.4);
+        transform: scale(1.08);
+        box-shadow: 0 0 18px rgba(0, 243, 255, 0.25);
+      }
+
+      /* ── RECORDING (Unmuted) State ── */
+      .mic-btn.recording {
+        background: rgba(0, 243, 255, 0.12);
+        border-color: #00f3ff;
+        color: #00f3ff;
+        box-shadow: 0 0 0 0 rgba(0, 243, 255, 0.6);
+        animation: micPulseRing 1.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+
+      /* Outer pulse ring that expands */
+      .mic-btn.recording::before {
+        content: '';
+        position: absolute;
+        inset: -6px;
+        border-radius: 50%;
+        border: 1px solid rgba(0, 243, 255, 0.5);
+        animation: micRingExpand 1.4s ease-out infinite;
+        pointer-events: none;
+      }
+
+      /* Second delayed ring for depth */
+      .mic-btn.recording::after {
+        content: '';
+        position: absolute;
+        inset: -12px;
+        border-radius: 50%;
+        border: 1.5px solid rgba(0, 243, 255, 0.25);
+        animation: micRingExpand 1.4s ease-out 0.5s infinite;
+        pointer-events: none;
+      }
+
+      @keyframes micPulseRing {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(0, 243, 255, 0.5), 0 0 20px rgba(0, 243, 255, 0.3); }
+        50%       { box-shadow: 0 0 0 8px rgba(0, 243, 255, 0), 0 0 30px rgba(0, 243, 255, 0.5); }
+      }
+
+      @keyframes micRingExpand {
+        0%   { transform: scale(1);   opacity: 0.8; }
+        100% { transform: scale(1.5); opacity: 0;   }
+      }
+
+      /* ── MUTED / Stopped Indicator on icon ── */
+      .mic-btn:not(.recording) i.fa-microphone-slash {
+        color: rgba(255, 255, 255, 0.35);
+      }
+  </style>
+
+</head>
+
+<body>
+  <!-- Ambient background -->
+  <div class="bg-orbs" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav>
+    <a href="index.html" class="brand" style="text-decoration: none;">
+      <i class="fa-solid fa-chevron-left" style="font-size: 1rem; color: white;"></i>
+      <img src="logo.png" alt="EduPeers Logo">
+    </a>
+    <div style="display: flex; align-items: center; gap: 1.2rem;">
+      <a href="settings.html" class="user-profile" id="user-profile" style="text-decoration: none;">
+        <div class="avatar" id="topbar-avatar">A</div>
+        <span class="user-name" id="topbar-user-name">Akshay</span>
+        <i class="fa-solid fa-gear" style="font-size: 0.9rem; color: var(--text-muted); margin-left: 0.5rem;"></i>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Focused Launch Page -->
+  <main class="dashboard" style="display: flex; justify-content: center; align-items: stretch; height: calc(100vh - 85px); max-height: calc(100vh - 85px); overflow: hidden; padding: 0.5rem 1rem 1rem 1rem; box-sizing: border-box;">
+    <section class="glass-panel chat-widget" style="width: 100%; max-width: 1120px; flex: 1; display: flex; flex-direction: column; box-shadow: 0 30px 60px rgba(0,0,0,0.6); position: relative; overflow: hidden; border-radius: 20px;">
+      <div class="panel-title tutor-header" style="justify-content: space-between; font-size: 1.3rem; margin-bottom: 1.5rem; flex-shrink: 0; padding-right: 1rem;">
+        <div class="tutor-header-left" style="display: flex; align-items: center; gap: 1rem;">
+          <a href="index.html" class="tutor-back-link" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; opacity: 0.6; transition: 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">
+            <i class="fa-solid fa-arrow-left" style="font-size: 1rem;"></i> <span>Dashboard</span>
+          </a>
+          <span class="tutor-divider" style="opacity: 0.3;">|</span>
+          <div class="tutor-title-text"><i class="fa-solid fa-robot"></i> Expert AI Tutor</div>
+        </div>
+        <button id="new-chat-btn" class="feature-link-cta tutor-new-chat-btn" style="width: auto; height: auto; padding: 0.5rem 1rem; font-size: 0.8rem; margin: 0; border-radius: 12px; transform: none; box-shadow: none;">
+          <i class="fa-solid fa-plus"></i> <span>New Chat</span>
+        </button>
+      </div>
+
+      <div class="chat-container" style="flex: 1; display: flex; flex-direction: row; overflow: hidden; height: auto;">
+        <!-- Left Sidebar: Conversations History -->
+        <aside id="chat-sidebar" class="chat-sidebar" style="width: 260px; background: rgba(0,0,0,0.25); border-right: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; overflow: hidden;">
+          <div id="conversations-list" style="flex: 1; overflow-y: auto; padding: 0.5rem;">
+            <!-- Rendered by app.js -->
+          </div>
+          <div style="padding: 1rem; border-top: 1px solid rgba(255,255,255,0.05);">
+             <button id="btn-clear-all" style="background: transparent; border: none; color: rgba(255,255,255,0.4); font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; width: 100%; transition: 0.2s;">
+               <i class="fa-solid fa-trash-can"></i> Clear All History
+             </button>
+          </div>
+        </aside>
+
+        <!-- Main Chat Area -->
+        <div class="chat-main" style="flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative;">
+          <div class="chat-box" id="chat-box" style="flex: 1; max-height: none; padding: 1.5rem;">
+            <!-- Selection Placeholder -->
+            <div id="chat-placeholder" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; opacity: 0.5; text-align: center; gap: 1rem;">
+               <i class="fa-solid fa-robot" style="font-size: 3rem;"></i>
+               <div>Select a conversation or start a new one to begin learning.</div>
+            </div>
+          </div>
+
+          <!-- Voice Indicator -->
+          <div id="voice-indicator-pill" class="voice-status-pill">
+            <div class="voice-wave-mini">
+              <div class="wave-bar-mini"></div>
+              <div class="wave-bar-mini"></div>
+              <div class="wave-bar-mini"></div>
+            </div>
+            LISTENING... REC
+          </div>
+
+          <div class="chat-input" id="chat-form" style="margin: 0.8rem 1rem 1rem 1rem; flex-shrink: 0; padding-bottom: 0px;">
+            <input type="text" id="chat-input-text" placeholder="Type your academic query..." autocomplete="off" style="font-size: 1.1rem; padding: 1.1rem 1.5rem; min-width: 0;">
+            <button id="chat-mic-btn" class="mic-btn" title="Voice Type" type="button"><i class="fa-solid fa-microphone"></i></button>
+            <button id="chat-send-btn" style="width: 56px; height: 56px; flex-shrink: 0;"><i class="fa-solid fa-paper-plane"></i></button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="ai-tutor.js?v=2026_tutor_v1"></script>
+  <script src="snow.js?v=2026_refresh"></script>
+  <script src="parallax.js?v=2026_refresh"></script>
+  
+  <!-- AI Tutor Voice Typing Logic -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const micBtn   = document.getElementById('chat-mic-btn');
+      const inputEl  = document.getElementById('chat-input-text');
+      const voicePill = document.getElementById('voice-indicator-pill');
+
+      // ── Browser support check ──
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        if (micBtn) {
+          micBtn.style.opacity = '0.3';
+          micBtn.style.cursor  = 'not-allowed';
+          micBtn.title = 'Voice typing needs Chrome or Edge';
+        }
+        return;
+      }
+
+      // ── State ──
+      let recognition  = null;
+      let isListening  = false;
+      let baseText     = '';
+      let finalChunk   = '';
+
+      // ── UI helpers ──
+      function setActive() {
+        micBtn.classList.add('recording');
+        micBtn.innerHTML = '<i class="fa-solid fa-microphone-slash"></i>';
+        micBtn.title = 'Click to stop';
+        if (voicePill) voicePill.classList.add('active');
+        isListening = true;
+      }
+
+      function setIdle() {
+        micBtn.classList.remove('recording');
+        micBtn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+        micBtn.title = 'Voice Type';
+        if (voicePill) voicePill.classList.remove('active');
+        isListening = false;
+        if (recognition) { try { recognition.stop(); } catch(e){} }
+      }
+
+      // ── Build & wire recognition ──
+      function buildRecognition() {
+        const r = new SpeechRecognition();
+        r.continuous      = true;
+        r.interimResults  = true;
+        r.lang            = 'en-US';
+        r.maxAlternatives = 1;
+
+        r.onstart = () => setActive();
+
+        r.onresult = (ev) => {
+          let interim = '';
+          for (let i = ev.resultIndex; i < ev.results.length; i++) {
+            const t = ev.results[i][0].transcript;
+            if (ev.results[i].isFinal) { finalChunk += t + ' '; }
+            else                        { interim     = t; }
+          }
+          inputEl.value = (baseText + finalChunk + interim).trimStart();
+        };
+
+        r.onerror = (ev) => {
+          console.warn('[Voice] Error:', ev.error);
+          if (ev.error === 'not-allowed' || ev.error === 'permission-denied') {
+            setIdle();
+            alert('🎤 Microphone blocked!\n\nClick the 🔒 padlock in the address bar → Microphone → Allow → then refresh the page.');
+          }
+          // no-speech / network → silent, onend will restart automatically
+        };
+
+        r.onend = () => {
+          // Auto-restart while the user hasn't manually stopped
+          if (isListening) {
+            try { r.start(); } catch(e) { setIdle(); }
+          }
+        };
+
+        return r;
+      }
+
+      // ── Main toggle ──
+      micBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        if (isListening) {
+          setIdle();
+          return;
+        }
+
+        // Explicitly ask for mic permission before touching SpeechRecognition
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          // Permission granted — stop the raw stream, let SpeechRecognition use the mic
+          stream.getTracks().forEach(t => t.stop());
+        } catch (err) {
+          alert('🎤 Microphone access denied.\n\nPlease allow microphone access in your browser settings and try again.');
+          return;
+        }
+
+        // Fresh recognition instance each recording session
+        baseText    = inputEl.value.trim() ? inputEl.value.trim() + ' ' : '';
+        finalChunk  = '';
+        recognition = buildRecognition();
+
+        try {
+          recognition.start();
+        } catch (err) {
+          console.error('[Voice] Could not start:', err);
+          setIdle();
+        }
+      });
+    });
+  </script>
+
+
+</body>
+
+</html>

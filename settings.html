@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>EduPeers - Settings</title>
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(r => r.forEach(reg => reg.unregister()));
+      }
+      if (window.caches) {
+        caches.keys().then(k => k.forEach(key => caches.delete(key)));
+      }
+    </script>
+    <link rel="stylesheet" href="index.css?v=2026_refresh">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0a0e17">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <style>
+        .settings-avatar-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 1rem;
+        }
+        .settings-avatar-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--hud-cyan), var(--hud-purple));
+            border: 1px solid rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #fff;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 25px var(--hud-purple-glow);
+            position: relative;
+        }
+        .settings-avatar-circle:hover {
+            transform: scale(1.05);
+            border-color: var(--hud-cyan);
+            box-shadow: 0 0 30px var(--hud-cyan-glow);
+        }
+        .settings-avatar-circle .edit-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: 0.3s;
+            border-radius: 50%;
+            font-size: 1.4rem;
+        }
+        .settings-avatar-circle:hover .edit-overlay {
+            opacity: 1;
+        }
+        .email-display {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 16px;
+            padding: 1rem 1.2rem;
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+        .email-display i {
+            color: var(--hud-cyan);
+        }
+        .email-lock-badge {
+            margin-left: auto;
+            font-size: 0.72rem;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+            padding: 0.2rem 0.6rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Background Orbs -->
+    <div class="bg-orbs" aria-hidden="true">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <div class="orb orb-4"></div>
+    </div>
+
+    <!-- Nav -->
+    <nav>
+        <a href="index.html" class="brand" style="text-decoration: none;">
+            <i class="fa-solid fa-chevron-left" style="font-size: 1rem; color: white;"></i>
+            <img src="logo.png" alt="EduPeers Logo">
+        </a>
+        <div style="display: flex; align-items: center; gap: 1.2rem;">
+            <div class="user-profile">
+                <div class="avatar" id="topbar-avatar">A</div>
+                <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                    <span class="user-name" id="topbar-user-name" style="line-height:1.2;">You</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="auth-container" style="min-height: calc(100vh - 100px);">
+        <div class="auth-panel" style="width: min(600px, 100%);">
+
+            <!-- Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h1 class="auth-title" style="margin: 0; font-size: 2rem;">Profile Settings</h1>
+                <a href="index.html" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2rem; text-decoration: none;">
+                    <i class="fa-solid fa-xmark"></i>
+                </a>
+            </div>
+
+            <!-- Avatar Editor -->
+            <div class="settings-avatar-wrapper">
+                <input type="file" id="settings-photo-input" accept="image/*" style="display:none;">
+                <label for="settings-photo-input">
+                    <div class="settings-avatar-circle" id="settings-avatar-preview">
+                        <span id="avatar-initial">A</span>
+                        <div class="edit-overlay"><i class="fa-solid fa-camera"></i></div>
+                    </div>
+                </label>
+                <span style="font-size: 0.82rem; color: var(--text-muted);">Tap to change profile photo</span>
+            </div>
+
+            <!-- Form -->
+            <form class="auth-form" id="settings-form" style="margin-top: 1rem;">
+
+                <!-- Display Name -->
+                <div class="form-group">
+                    <label for="settings-username"><i class="fa-solid fa-user" style="color:var(--hud-cyan); margin-right: 0.4rem;"></i>Display Name</label>
+                    <input type="text" id="settings-username" class="auth-input" required autocomplete="off" placeholder="Your name" style="background: rgba(0,0,0,0.3); color: white;">
+                </div>
+
+                <!-- Age -->
+                <div class="form-group">
+                    <label for="settings-age"><i class="fa-solid fa-cake-candles" style="color:var(--hud-cyan); margin-right: 0.4rem;"></i>Age</label>
+                    <input type="number" id="settings-age" class="auth-input" min="10" max="100" placeholder="Your age" autocomplete="off" style="background: rgba(0,0,0,0.3); color: white;">
+                </div>
+
+                <!-- Gender -->
+                <div class="form-group">
+                    <label for="settings-gender"><i class="fa-solid fa-venus-mars" style="color:var(--hud-cyan); margin-right: 0.4rem;"></i>Gender</label>
+                    <select id="settings-gender" class="auth-input" style="background: rgba(0,0,0,0.3); color: white;">
+                        <option value="">Select gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <!-- Email (read-only) -->
+                <div class="form-group">
+                    <label><i class="fa-solid fa-envelope" style="color:var(--text-muted); margin-right: 0.4rem;"></i>Email (cannot be changed)</label>
+                    <div class="email-display">
+                        <i class="fa-solid fa-lock"></i>
+                        <span id="settings-email-display">—</span>
+                        <span class="email-lock-badge">Locked</span>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <button type="submit" class="auth-btn" style="margin-top: 1rem;">
+                    <i class="fa-solid fa-floppy-disk" style="margin-right: 0.5rem;"></i>Save Changes
+                </button>
+                <button type="button" class="auth-btn auth-btn-secondary" id="btn-logout">
+                    <i class="fa-solid fa-right-from-bracket" style="margin-right: 0.5rem;"></i>Sign Out
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Load user data
+        const currentName   = localStorage.getItem('edupeers_username');
+        const currentAge    = localStorage.getItem('edupeers_age');
+        const currentGender = localStorage.getItem('edupeers_gender');
+        const currentEmail  = localStorage.getItem('edupeers_email');
+        const currentPhoto  = localStorage.getItem('edupeers_photo');
+
+        if (!currentName) {
+            window.location.href = 'login.html';
+        }
+
+        // Populate topbar
+        const initial = currentName ? currentName.charAt(0).toUpperCase() : 'U';
+        document.getElementById('topbar-user-name').innerText = currentName || '';
+        const ageDisplay = document.getElementById('topbar-user-age');
+        if (ageDisplay && currentAge) {
+            ageDisplay.innerText = `${currentAge} yr`;
+        }
+        const genderDisplay = document.getElementById('topbar-user-gender');
+        if (genderDisplay && currentGender) {
+            genderDisplay.innerText = currentGender;
+        }
+
+        const topbarAvatar = document.getElementById('topbar-avatar');
+        if (currentPhoto) {
+            topbarAvatar.innerHTML = `<img src="${currentPhoto}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+        } else {
+            topbarAvatar.innerText = initial;
+        }
+
+        // Populate form
+        document.getElementById('settings-username').value = currentName || '';
+        document.getElementById('settings-age').value = currentAge || '';
+        if (currentGender) document.getElementById('settings-gender').value = currentGender;
+        document.getElementById('settings-email-display').innerText = currentEmail || 'Not set';
+
+        // Populate avatar preview
+        const avatarPreview = document.getElementById('settings-avatar-preview');
+        const avatarInitial = document.getElementById('avatar-initial');
+        if (currentPhoto) {
+            avatarInitial.innerHTML = `<img src="${currentPhoto}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+        } else {
+            avatarInitial.innerText = initial;
+        }
+
+        // Photo upload handling
+        let newPhotoBase64 = null;
+        document.getElementById('settings-photo-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                newPhotoBase64 = evt.target.result;
+                avatarInitial.innerHTML = `<img src="${newPhotoBase64}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+                avatarPreview.style.border = '3px solid var(--hud-cyan)';
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Save changes
+        document.getElementById('settings-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const newName   = document.getElementById('settings-username').value.trim();
+            const newAge    = document.getElementById('settings-age').value.trim();
+            const newGender = document.getElementById('settings-gender').value;
+
+            if (!newName) return;
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+
+                const res = await fetch('/api/profile/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: currentEmail,
+                        username: newName,
+                        age: newAge,
+                        gender: newGender
+                    })
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    alert(data.error || 'Failed to update profile');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Changes';
+                    return;
+                }
+
+                localStorage.setItem('edupeers_username', newName);
+                if (newAge)    localStorage.setItem('edupeers_age', newAge);
+                if (newGender) localStorage.setItem('edupeers_gender', newGender);
+                if (newPhotoBase64) localStorage.setItem('edupeers_photo', newPhotoBase64);
+
+                // Visual feedback
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Saved!';
+                btn.style.background = 'linear-gradient(135deg, #00ff88, #00c36e)';
+                setTimeout(() => { window.location.href = 'index.html'; }, 900);
+            } catch (err) {
+                console.error(err);
+                alert('Connection error. Failed to save changes.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Save Changes';
+            }
+        });
+
+        // Sign out
+        document.getElementById('btn-logout').addEventListener('click', () => {
+            ['edupeers_username','edupeers_photo','edupeers_email','edupeers_age','edupeers_gender','edupeers_institution','edupeers_role','edupeers_profession','edupeers_fact_data','edupeers_fact_time'].forEach(k => localStorage.removeItem(k));
+            window.location.href = 'login.html';
+        });
+    </script>
+    <script src="snow.js?v=2026_refresh"></script>
+    <script src="parallax.js?v=2026_refresh"></script>
+</body>
+</html>

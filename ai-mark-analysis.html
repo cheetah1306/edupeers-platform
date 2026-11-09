@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>AI Mark Analysis - EduPeers</title>
+  <meta name="description" content="EduPeers - AI Mark Analysis.">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(r => r.forEach(reg => reg.unregister()));
+    }
+    if (window.caches) {
+      caches.keys().then(k => k.forEach(key => caches.delete(key)));
+    }
+  </script>
+  <link rel="stylesheet" href="index.css?v=2026_refresh">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Markdown Parser -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- PWA & Mobile Optimization tags -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0a0e17">
+  <link rel="apple-touch-icon" href="logo.png">
+  <link rel="icon" type="image/png" href="logo.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <style>
+    .mark-entry-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+    
+    .mark-entry-row input {
+      flex: 1;
+      padding: 0.8rem 1rem;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(0,0,0,0.3);
+      color: white;
+      font-size: 1rem;
+    }
+
+    .mark-entry-row input:focus {
+      outline: none;
+      border-color: var(--hud-cyan, #00f3ff);
+      box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+    }
+
+    .remove-row-btn {
+      background: rgba(255, 71, 87, 0.2);
+      border: 1px solid rgba(255, 71, 87, 0.4);
+      color: #ff4757;
+      border-radius: 8px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .remove-row-btn:hover {
+      background: #ff4757;
+      color: white;
+    }
+
+    .analysis-result-container {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: rgba(0,0,0,0.4);
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: white;
+      line-height: 1.6;
+      display: none;
+    }
+
+    .analysis-result-container.active {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .loader {
+      display: none;
+      text-align: center;
+      margin: 2rem 0;
+      color: var(--hud-cyan);
+    }
+
+    .loader.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+
+</head>
+
+<body>
+  <!-- Ambient background -->
+  <div class="bg-orbs" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav>
+    <a href="index.html" class="brand" style="text-decoration: none;">
+      <i class="fa-solid fa-chevron-left" style="font-size: 1rem; color: white;"></i>
+      <img src="logo.png" alt="EduPeers Logo">
+    </a>
+    <div style="display: flex; align-items: center; gap: 1.2rem;">
+
+      <a href="settings.html" class="user-profile" id="user-profile" style="text-decoration: none;">
+        <div class="avatar" id="topbar-avatar">A</div>
+        <span class="user-name" id="topbar-user-name">Akshay</span>
+        <i class="fa-solid fa-gear" style="font-size: 0.9rem; color: var(--text-muted); margin-left: 0.5rem;"></i>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="dashboard" style="display: flex; justify-content: center; align-items: stretch; flex: 1; margin-bottom: 2rem; overflow: visible; height: auto;">
+    <section class="glass-panel" style="width: 100%; max-width: 850px; flex: 1; display: flex; flex-direction: column; box-shadow: 0 30px 60px rgba(0,0,0,0.6); position: relative; padding: 2rem; box-sizing: border-box;">
+      
+      <div class="panel-title tutor-header" style="justify-content: space-between; font-size: 1.3rem; margin-bottom: 1.5rem;">
+        <div class="tutor-header-left" style="display: flex; align-items: center; gap: 1rem;">
+          <a href="index.html" class="tutor-back-link" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 0.5rem; opacity: 0.6; transition: 0.2s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">
+            <i class="fa-solid fa-arrow-left" style="font-size: 1rem;"></i> <span>Dashboard</span>
+          </a>
+          <span class="tutor-divider" style="opacity: 0.3;">|</span>
+          <div class="tutor-title-text"><i class="fa-solid fa-chart-line"></i> AI Mark Analysis</div>
+        </div>
+      </div>
+
+      <div style="color: rgba(255,255,255,0.8); margin-bottom: 2rem; font-size: 1.05rem;">
+        Enter your subjects and marks below. Our AI will analyze your performance, create a presentation of your strengths and weaknesses, and provide customized advice on what lessons or topics to prioritize for your next exam.
+      </div>
+
+      <div id="marks-container">
+        <!-- Input rows will be injected here -->
+      </div>
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; flex-wrap: wrap; gap: 1rem;">
+        <button id="add-subject-btn" class="feature-link-cta" style="width: auto; margin: 0; background: rgba(255,255,255,0.1); box-shadow: 0 0 10px rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.2);">
+          <i class="fa-solid fa-plus"></i> Add Subject
+        </button>
+        
+        <button id="analyze-btn" class="feature-link-cta" style="width: auto; margin: 0;">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> AI Analysis
+        </button>
+      </div>
+
+      <div class="loader" id="analysis-loader">
+        <i class="fa-solid fa-circle-notch fa-spin fa-3x"></i>
+        <p style="margin-top: 1rem;">Analyzing marks and generating insights...</p>
+      </div>
+
+      <div class="analysis-result-container" id="analysis-result">
+        <!-- Markdown content injected here -->
+      </div>
+
+    </section>
+  </main>
+
+  <script src="snow.js?v=2026_refresh"></script>
+  <script src="parallax.js?v=2026_refresh"></script>
+  <script src="ai-mark-analysis.js?v=2026_refresh"></script>
+</body>
+
+</html>

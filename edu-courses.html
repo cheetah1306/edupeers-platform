@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Edu Courses - EduPeers</title>
+  <meta name="description" content="EduPeers - Handpicked high-quality educational courses curated for you.">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(r => r.forEach(reg => reg.unregister()));
+    }
+    if (window.caches) {
+      caches.keys().then(k => k.forEach(key => caches.delete(key)));
+    }
+  </script>
+  <link rel="stylesheet" href="index.css?v=2026_refresh">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- PWA & Mobile Optimization tags -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0a0e17">
+  <link rel="apple-touch-icon" href="logo.png">
+  <link rel="icon" type="image/png" href="logo.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <style>
+    :root {
+      --color-edu: #ff8800; /* New sector color for Edu Courses: Vivid Amber */
+      --color-vlsi: #00f2ff;
+      --color-embedded: #00ff88;
+    }
+
+    .edu-shell {
+      flex: 1;
+      padding: 2rem;
+      max-width: 1260px;
+      margin: 0 auto;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .edu-hero {
+      margin-bottom: 2.5rem;
+    }
+
+    .course-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+
+    .course-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 32px;
+      overflow: hidden;
+      transition: 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .course-card:hover {
+      background: rgba(255, 255, 255, 0.08);
+      transform: translateY(-6px) scale(1.01);
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 136, 0, 0.12);
+    }
+
+    .course-image-area {
+      position: relative;
+      height: 220px;
+      overflow: hidden;
+    }
+
+    .course-image-area img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .course-card:hover .course-image-area img {
+      transform: scale(1.1);
+    }
+
+    .course-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+      display: flex;
+      align-items: flex-end;
+      padding: 1.5rem;
+    }
+
+    .course-badge {
+      padding: 0.4rem 1rem;
+      background: var(--color-edu);
+      color: #000;
+      font-weight: 700;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-radius: 99px;
+      box-shadow: 0 4px 15px rgba(255, 136, 0, 0.4);
+    }
+
+    .course-body {
+      padding: 1.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      flex: 1;
+    }
+
+    .course-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      color: #fff;
+    }
+
+    .course-desc {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .course-footer {
+      padding: 1.5rem 1.8rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .playlist-info {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 0.8rem;
+    }
+
+    .watch-cta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--color-edu);
+      font-weight: 700;
+      font-size: 0.9rem;
+      transition: gap 0.3s ease;
+    }
+
+    .course-card:hover .watch-cta {
+      gap: 0.8rem;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+      transition: color 0.3s ease, margin-left 0.3s ease;
+    }
+
+    .back-btn:hover {
+      color: #fff;
+      margin-left: -5px;
+    }
+
+    /* Ambient Section Color Coding */
+    .card-vlsi .course-badge { background: var(--color-vlsi); color: #000; box-shadow: 0 4px 15px rgba(0, 242, 255, 0.4); }
+    .card-vlsi .watch-cta { color: var(--color-vlsi); }
+    
+    .card-embedded .course-badge { background: var(--color-embedded); color: #000; box-shadow: 0 4px 15px rgba(0, 255, 136, 0.4); }
+    .card-embedded .watch-cta { color: var(--color-embedded); }
+
+    @media (max-width: 600px) {
+      .edu-shell {
+        padding: 1.2rem;
+      }
+      .course-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Ambient background -->
+  <div class="bg-orbs" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="orb orb-4"></div>
+  </div>
+
+  <nav>
+    <div class="brand">
+      <img src="logo.png" alt="EduPeers Logo">
+    </div>
+    <div style="display: flex; align-items: center; gap: 1.2rem;">
+
+      <a href="settings.html" class="user-profile" id="user-profile" style="text-decoration: none;">
+        <div class="avatar" id="topbar-avatar">A</div>
+        <div style="display: flex; flex-direction: column; align-items: flex-start;">
+          <span class="user-name" id="topbar-user-name">Akshay</span>
+        </div>
+        <i class="fa-solid fa-gear" style="font-size: 0.9rem; color: var(--text-muted); margin-left: 0.5rem;"></i>
+      </a>
+    </div>
+  </nav>
+
+  <main class="edu-shell">
+    
+    <a href="index.html" class="back-btn">
+      <i class="fa-solid fa-arrow-left"></i>
+      Back to Dashboard
+    </a>
+
+    <header class="edu-hero">
+      <h1 class="playfair" style="font-size: clamp(2rem, 5vw, 2.8rem); margin-bottom: 1rem; color: #fff;">Handpicked <span style="color: var(--color-edu);">Edu Courses</span></h1>
+      <p style="color: var(--text-muted); font-size: 1.1rem; max-width: 700px; line-height: 1.8;">
+        Level up your skills with our curated selection of industry-level courses. From circuit design to embedded logic, everything you need to master your field is right here.
+      </p>
+    </header>
+
+    <div class="course-grid">
+
+      <!-- VLSI Course Card -->
+      <a href="https://youtube.com/playlist?list=PLgwJf8NK-2e6au9bX9P_bA3ywxqigCsaC&si=ibs4Kyn50-KB0iF0" target="_blank" class="course-card card-vlsi">
+        <div class="course-image-area">
+          <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=2000" alt="VLSI Digital Design Course">
+          <div class="course-overlay">
+            <span class="course-badge">Electronic Design</span>
+          </div>
+        </div>
+        <div class="course-body">
+          <h2 class="course-title">VLSI Technology & Design</h2>
+          <p class="course-desc">Master the fundamentals of Very Large Scale Integration, circuit layouts, and digital fabrication techniques in this comprehensive workshop.</p>
+        </div>
+        <div class="course-footer">
+          <div class="playlist-info">
+            <i class="fa-brands fa-youtube"></i>
+            <span>YouTube Playlist</span>
+          </div>
+          <div class="watch-cta">
+            Watch Now <i class="fa-solid fa-play"></i>
+          </div>
+        </div>
+      </a>
+
+      <!-- Embedded Systems Course Card -->
+      <a href="https://youtube.com/playlist?list=PLPW8O6W-1chwyTzI3BHwBLbGQoPFxPAPM&si=Q4CJbyrNGsZfaYI8" target="_blank" class="course-card card-embedded">
+        <div class="course-image-area">
+          <img src="https://images.unsplash.com/photo-1553406830-ef2513450d76?auto=format&fit=crop&q=80&w=2000" alt="Embedded Systems Course">
+          <div class="course-overlay">
+            <span class="course-badge">Hardware Logic</span>
+          </div>
+        </div>
+        <div class="course-body">
+          <h2 class="course-title">Embedded Systems Mastery</h2>
+          <p class="course-desc">Explore the world of microcontrollers, RTOS, and low-level hardware interfacing. Learn to build responsive, efficient smart devices from scratch.</p>
+        </div>
+        <div class="course-footer">
+          <div class="playlist-info">
+            <i class="fa-brands fa-youtube"></i>
+            <span>YouTube Playlist</span>
+          </div>
+          <div class="watch-cta">
+            Watch Now <i class="fa-solid fa-play"></i>
+          </div>
+        </div>
+      </a>
+
+      <!-- IoT Course Card -->
+      <a href="https://youtu.be/E8R5IOqfjbA?si=3jDh3oDWTXQi-jUG" target="_blank" class="course-card card-iot">
+        <div class="course-image-area">
+          <img src="https://images.unsplash.com/photo-1558346490-a72e53ae2d4f?auto=format&fit=crop&q=80&w=2000" alt="IoT Course">
+          <div class="course-overlay">
+            <span class="course-badge" style="background: var(--color-tools); box-shadow: 0 4px 15px rgba(255, 214, 10, 0.4);">Smart Connectivity</span>
+          </div>
+        </div>
+        <div class="course-body">
+          <h2 class="course-title">Internet of Things (IoT)</h2>
+          <p class="course-desc">Dive into the ecosystem of connected devices. Bridging the gap between hardware sensors and cloud-based analytics for real-world impact.</p>
+        </div>
+        <div class="course-footer">
+          <div class="playlist-info">
+            <i class="fa-brands fa-youtube"></i>
+            <span>YouTube Video</span>
+          </div>
+          <div class="watch-cta" style="color: var(--color-tools);">
+            Watch Now <i class="fa-solid fa-play"></i>
+          </div>
+        </div>
+      </a>
+
+      <!-- DSP Course Card -->
+      <a href="https://youtube.com/playlist?list=PLUQpHm_JtukLkIO7QB6dp3KITCOM0ChGq&si=_feWUOXElAk0pO4R" target="_blank" class="course-card card-dsp">
+        <div class="course-image-area">
+          <img src="https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&q=80&w=2000" alt="DSP Course">
+          <div class="course-overlay">
+            <span class="course-badge" style="background: var(--hud-purple); box-shadow: 0 4px 15px rgba(157, 0, 255, 0.4); color: white;">Signal Math</span>
+          </div>
+        </div>
+        <div class="course-body">
+          <h2 class="course-title">Digital Signal Processing</h2>
+          <p class="course-desc">Analyze and manipulate real-world signals using mathematical algorithms and high-speed processors for audio, image, and data processing.</p>
+        </div>
+        <div class="course-footer">
+          <div class="playlist-info">
+            <i class="fa-brands fa-youtube"></i>
+            <span>YouTube Playlist</span>
+          </div>
+          <div class="watch-cta" style="color: var(--hud-purple);">
+            Watch Now <i class="fa-solid fa-play"></i>
+          </div>
+        </div>
+      </a>
+
+      <!-- Machine Learning Card -->
+      <a href="https://youtube.com/playlist?list=PLEiEAq2VkUULYYgj13YHUWmRePqiu8Ddy&si=WQKP93pCjm3rFlnR" target="_blank" class="course-card card-ml">
+        <div class="course-image-area">
+          <img src="https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80&w=2000" alt="Machine Learning Course">
+          <div class="course-overlay">
+            <span class="course-badge" style="background: var(--color-ml); box-shadow: 0 4px 15px rgba(157, 0, 255, 0.4); color: white;">Neural Logic</span>
+          </div>
+        </div>
+        <div class="course-body">
+          <h2 class="course-title">Artificial Intel & ML</h2>
+          <p class="course-desc">Master the foundations of predictive modeling, neural networks, and deep learning. Empowering you to build smart, data-driven solutions.</p>
+        </div>
+        <div class="course-footer">
+          <div class="playlist-info">
+            <i class="fa-brands fa-youtube"></i>
+            <span>YouTube Playlist</span>
+          </div>
+          <div class="watch-cta" style="color: var(--color-ml);">
+            Watch Now <i class="fa-solid fa-play"></i>
+          </div>
+        </div>
+      </a>
+
+      <!-- Placeholder / More Courses Card -->
+      <div class="course-card" style="opacity: 0.4; cursor: default; border-style: dashed; grid-column: span 1;">
+        <div class="course-body" style="justify-content: center; align-items: center; text-align: center; height: 300px;">
+          <i class="fa-solid fa-circle-plus" style="font-size: 3rem; color: rgba(255,255,255,0.1); margin-bottom: 1rem;"></i>
+          <h2 class="course-title" style="color: rgba(255,255,255,0.2);">More Coming Soon</h2>
+          <p class="course-desc">We are actively curating more specialized courses for your academic growth.</p>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script src="snow.js?v=2026_refresh"></script>
+  <script src="parallax.js?v=2026_refresh"></script>
+  <script>
+    const savedName = localStorage.getItem('userName');
+    if (savedName) {
+      document.getElementById('topbar-user-name').textContent = savedName;
+      document.getElementById('topbar-avatar').textContent = savedName.charAt(0).toUpperCase();
+    }
+  </script>
+</body>
+
+</html>

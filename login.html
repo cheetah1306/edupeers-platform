@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>EduPeers L&D — Sign In</title>
+    <meta name="description" content="EduPeers Enterprise Learning & Development Platform. Secure OTP login.">
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(r => r.forEach(reg => reg.unregister()));
+        }
+        if (window.caches) {
+            caches.keys().then(k => k.forEach(key => caches.delete(key)));
+        }
+    </script>
+    <link rel="stylesheet" href="index.css?v=2026_refresh">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#060914">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <style>
+        /* ─── Base Reset ────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html, body {
+            min-height: 100vh;
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            background: #060914;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* ─── Ambient Liquid Background Orbs ────────────── */
+        .bg-orbs {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 0;
+        }
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.55;
+            animation: orbFloat 14s ease-in-out infinite alternate;
+        }
+        .orb-1 { width: 450px; height: 450px; top: -100px; left: -100px; background: radial-gradient(circle, rgba(157, 78, 221, 0.45), transparent 70%); }
+        .orb-2 { width: 400px; height: 400px; bottom: -80px; right: -80px; background: radial-gradient(circle, rgba(0, 242, 255, 0.35), transparent 70%); animation-delay: -5s; }
+        .orb-3 { width: 300px; height: 300px; top: 40%; right: 25%; background: radial-gradient(circle, rgba(0, 180, 216, 0.25), transparent 70%); animation-delay: -9s; }
+        @keyframes orbFloat {
+            0%   { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, 30px) scale(1.1); }
+        }
+
+        /* ─── Centered Container ────────────────────────── */
+        .login-wrapper {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        /* ─── Luxury Compact Glass Card ─────────────────── */
+        .login-card {
+            width: 100%;
+            max-width: 960px;
+            background: linear-gradient(135deg, rgba(14, 20, 38, 0.85) 0%, rgba(8, 12, 24, 0.9) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            box-shadow: 0 25px 65px rgba(0, 0, 0, 0.75), 0 0 35px rgba(157, 78, 221, 0.18);
+            backdrop-filter: blur(28px) saturate(180%);
+            -webkit-backdrop-filter: blur(28px) saturate(180%);
+            display: flex;
+            overflow: hidden;
+            animation: cardAppear 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        @keyframes cardAppear {
+            from { opacity: 0; transform: translateY(18px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* ─── Left Hero Showcase (42% width) ────────────── */
+        .card-hero {
+            flex: 0 0 42%;
+            background: linear-gradient(155deg, rgba(18, 26, 52, 0.75) 0%, rgba(12, 16, 32, 0.95) 100%);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 2.2rem 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .card-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0, 242, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 242, 255, 0.04) 1px, transparent 1px);
+            background-size: 32px 32px;
+            mask-image: radial-gradient(ellipse at center, white 30%, transparent 80%);
+            pointer-events: none;
+        }
+
+        /* ── Circular Glowing Logo ── */
+        .logo-circle-wrap {
+            position: relative;
+            margin-bottom: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .logo-spinning-ring {
+            width: 82px;
+            height: 82px;
+            border-radius: 50%;
+            padding: 2.5px;
+            background: conic-gradient(from 0deg, #9d4edd, #00f2ff, #00ff88, #9d4edd);
+            animation: logoSpin 5s linear infinite;
+            box-shadow: 0 0 28px rgba(0, 242, 255, 0.45), 0 0 50px rgba(157, 78, 221, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        @keyframes logoSpin {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+        .logo-circle-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #0a0e1c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            box-shadow: inset 0 2px 6px rgba(0,0,0,0.7);
+        }
+        .logo-circle-inner img {
+            width: 54px;
+            height: 54px;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+        .logo-halo-ring {
+            position: absolute;
+            inset: -6px;
+            border-radius: 50%;
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            animation: haloPulse 3s ease-in-out infinite;
+        }
+        @keyframes haloPulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+
+        /* ── Hero Text ── */
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 99px;
+            background: rgba(0, 242, 255, 0.1);
+            border: 1px solid rgba(0, 242, 255, 0.25);
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #00f2ff;
+            margin-bottom: 0.75rem;
+        }
+        .hero-heading {
+            font-size: 1.55rem;
+            font-weight: 900;
+            line-height: 1.2;
+            letter-spacing: -0.5px;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #ffffff 0%, #00f2ff 65%, #c77dff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero-desc {
+            font-size: 0.82rem;
+            color: rgba(255, 255, 255, 0.55);
+            line-height: 1.5;
+            max-width: 280px;
+            margin-bottom: 1.4rem;
+        }
+
+        /* ── Hero Feature Pills ── */
+        .hero-pills {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+            max-width: 290px;
+        }
+        .hero-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 0.78rem;
+            text-align: left;
+            transition: all 0.2s ease;
+        }
+        .hero-pill:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(0, 242, 255, 0.25);
+            transform: translateX(3px);
+        }
+        .pill-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+        .pill-icon.purple { background: rgba(157, 78, 221, 0.2); color: #c77dff; }
+        .pill-icon.cyan   { background: rgba(0, 242, 255, 0.18); color: #00f2ff; }
+        .pill-icon.green  { background: rgba(0, 255, 136, 0.18); color: #7cf29a; }
+        .pill-text {
+            line-height: 1.3;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        .pill-text strong {
+            display: block;
+            color: #fff;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        /* ─── Right Form Panel (58% width) ──────────────── */
+        .card-form-pane {
+            flex: 1;
+            padding: 2rem 2.4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow-y: auto;
+        }
+
+        .form-title-wrap {
+            margin-bottom: 1.2rem;
+        }
+        .form-title-tag {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: rgba(0, 242, 255, 0.75);
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+        .form-title {
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -0.3px;
+        }
+        .form-title span {
+            background: linear-gradient(90deg, #9d4edd, #00f2ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ── Status Alert ── */
+        .status-alert {
+            padding: 9px 14px;
+            border-radius: 10px;
+            margin-bottom: 0.9rem;
+            display: none;
+            font-size: 0.82rem;
+            line-height: 1.45;
+            animation: alertFade 0.25s ease;
+        }
+        @keyframes alertFade {
+            from { opacity: 0; transform: translateY(-4px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .status-alert.warning { background: rgba(255,170,0,0.12); border: 1px solid rgba(255,170,0,0.35); color: #ffd166; }
+        .status-alert.success { background: rgba(0,255,136,0.12); border: 1px solid rgba(0,255,136,0.35); color: #7cf29a; }
+        .status-alert.danger  { background: rgba(255,75,75,0.12); border: 1px solid rgba(255,75,75,0.35); color: #ff758f; }
+
+        /* ── Compact Photo Uploader ── */
+        .photo-uploader {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 12px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px dashed rgba(255, 255, 255, 0.15);
+            margin-bottom: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .photo-uploader:hover {
+            background: rgba(157, 78, 221, 0.08);
+            border-color: rgba(157, 78, 221, 0.4);
+        }
+        .photo-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #9d4edd, #00f2ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            overflow: hidden;
+            box-shadow: 0 0 12px rgba(0, 242, 255, 0.3);
+        }
+        .photo-circle i { font-size: 0.95rem; color: #fff; }
+        .photo-label-text strong { display: block; font-size: 0.78rem; color: #fff; font-weight: 700; }
+        .photo-label-text span { font-size: 0.68rem; color: rgba(255, 255, 255, 0.4); }
+
+        /* ── Form Inputs ── */
+        .form-group {
+            margin-bottom: 0.65rem;
+        }
+        .form-group label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: rgba(255, 255, 255, 0.55);
+            margin-bottom: 4px;
+        }
+        .form-group label i { color: #00f2ff; font-size: 0.68rem; }
+
+        .auth-input {
+            width: 100%;
+            padding: 9px 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 0.85rem;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.2s ease;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+        .auth-input::placeholder { color: rgba(255, 255, 255, 0.25); }
+        .auth-input:focus {
+            border-color: rgba(0, 242, 255, 0.55);
+            background: rgba(0, 242, 255, 0.05);
+            box-shadow: 0 0 0 3px rgba(0, 242, 255, 0.08);
+        }
+        select.auth-input {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='rgba(255,255,255,0.45)' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            cursor: pointer;
+        }
+        select.auth-input option { background: #0e1424; color: #fff; }
+
+        .auth-grid-two {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        /* ── Submit Button ── */
+        .auth-btn {
+            width: 100%;
+            padding: 11px 16px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #9d4edd 0%, #00b4d8 50%, #00f2ff 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 0.4rem;
+            box-shadow: 0 4px 18px rgba(0, 180, 216, 0.35);
+            transition: all 0.25s ease;
+        }
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(0, 180, 216, 0.5);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        .auth-btn:active { transform: translateY(0); }
+        .auth-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        .auth-btn-secondary {
+            background: rgba(255, 255, 255, 0.06) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            box-shadow: none !important;
+            color: rgba(255, 255, 255, 0.7) !important;
+            margin-top: 8px;
+        }
+        .auth-btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        /* ── Auth Step Panels ── */
+        .auth-stage { display: block !important; position: relative !important; width: 100% !important; }
+        .auth-step-panel { display: none !important; }
+        .auth-step-panel.is-active,
+        .auth-step-panel[style*="display: block"] { display: block !important; }
+
+        /* ── OTP Verification ── */
+        .otp-banner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(0, 45, 80, 0.9), rgba(20, 5, 55, 0.9));
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            margin-bottom: 1rem;
+        }
+        .otp-banner-icon {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: rgba(0, 242, 255, 0.15);
+            border: 1px solid rgba(0, 242, 255, 0.35);
+            display: flex; align-items: center; justify-content: center;
+            color: #00f2ff; font-size: 0.95rem; flex-shrink: 0;
+        }
+        .otp-input-field {
+            display: block !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            font-size: 2rem !important;
+            font-family: 'Courier New', monospace !important;
+            font-weight: 900 !important;
+            letter-spacing: 12px !important;
+            text-align: center !important;
+            padding: 12px 16px !important;
+            background: #ffffff !important;
+            color: #080d1a !important;
+            border: 2px solid rgba(0, 242, 255, 0.5) !important;
+            border-radius: 12px !important;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.25) !important;
+            outline: none !important;
+            caret-color: #0077ee !important;
+            -webkit-text-fill-color: #080d1a !important;
+        }
+        .otp-input-field:focus {
+            border-color: #00ff88 !important;
+            box-shadow: 0 0 25px rgba(0, 255, 136, 0.35) !important;
+        }
+
+        .form-footer {
+            margin-top: 1.2rem;
+            text-align: center;
+            font-size: 0.72rem;
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* ─── Mobile Responsiveness (<= 768px) ──────────── */
+        @media (max-width: 768px) {
+            .login-wrapper { padding: 12px; }
+            .login-card {
+                flex-direction: column;
+                border-radius: 18px;
+                max-width: 480px;
+            }
+            .card-hero {
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                padding: 1.6rem 1.2rem 1.2rem;
+            }
+            .hero-pills { display: none; }
+            .hero-heading { font-size: 1.3rem; }
+            .hero-desc { font-size: 0.75rem; margin-bottom: 0; }
+            .card-form-pane {
+                padding: 1.4rem 1.2rem 1.8rem;
+            }
+            .auth-grid-two { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Ambient Background -->
+    <div class="bg-orbs" aria-hidden="true">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <div class="login-wrapper">
+        <div class="login-card">
+
+            <!-- ════════════════════════════════════════════
+                 LEFT HERO SHOWCASE
+            ════════════════════════════════════════════ -->
+            <aside class="card-hero" aria-hidden="true">
+                <!-- Circular Rotating Glow Logo -->
+                <div class="logo-circle-wrap">
+                    <div class="logo-halo-ring"></div>
+                    <div class="logo-spinning-ring">
+                        <div class="logo-circle-inner">
+                            <img src="logo.png" alt="EduPeers Logo">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hero-badge">
+                    <i class="fa-solid fa-circle" style="font-size:0.4rem;"></i>
+                    Enterprise L&amp;D Platform
+                </div>
+                <h1 class="hero-heading">Learn. Grow.<br>Lead the Future.</h1>
+                <p class="hero-desc">Unified workspace for Trainees, Trainers &amp; Admins powered by AI.</p>
+
+                <!-- Feature Pills -->
+                <div class="hero-pills">
+                    <div class="hero-pill">
+                        <div class="pill-icon purple"><i class="fa-solid fa-brain"></i></div>
+                        <div class="pill-text">
+                            <strong>AI-Powered Tutoring</strong>
+                            24/7 Personal Guidance
+                        </div>
+                    </div>
+                    <div class="hero-pill">
+                        <div class="pill-icon cyan"><i class="fa-solid fa-users-gear"></i></div>
+                        <div class="pill-text">
+                            <strong>3-Role Architecture</strong>
+                            Trainee · Trainer · Admin
+                        </div>
+                    </div>
+                    <div class="hero-pill">
+                        <div class="pill-icon green"><i class="fa-solid fa-shield-halved"></i></div>
+                        <div class="pill-text">
+                            <strong>Secure OTP Login</strong>
+                            Passwordless verification
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- ════════════════════════════════════════════
+                 RIGHT AUTH FORM PANE
+            ════════════════════════════════════════════ -->
+            <main class="card-form-pane">
+                <div class="form-title-wrap">
+                    <div class="form-title-tag">EduPeers Workspace</div>
+                    <div class="form-title">Welcome <span>aboard</span> 👋</div>
+                </div>
+
+                <!-- Status Alert -->
+                <div id="status-alert" class="status-alert"></div>
+
+                <div class="auth-stage">
+                    <!-- ========================================== -->
+                    <!-- STEP 1: IDENTITY & DETAILS FORM           -->
+                    <!-- ========================================== -->
+                    <section id="step-1" class="auth-step-panel is-active" aria-hidden="false">
+                        <form id="profile-details-form" onsubmit="handleSendOtp(event)">
+
+                            <!-- Photo Upload -->
+                            <input type="file" id="profile-photo" accept="image/*" style="display:none;" onchange="handlePhotoPreview(event)">
+                            <label for="profile-photo" class="photo-uploader">
+                                <div class="photo-circle" id="photo-preview">
+                                    <i class="fa-solid fa-camera"></i>
+                                </div>
+                                <div class="photo-label-text">
+                                    <strong>Upload Workspace Photo</strong>
+                                    <span>Optional · PNG, JPG supported</span>
+                                </div>
+                                <i class="fa-solid fa-arrow-up-from-bracket" style="color:rgba(255,255,255,0.25); font-size:0.75rem; margin-left:auto;"></i>
+                            </label>
+
+                            <!-- 1. Name -->
+                            <div class="form-group">
+                                <label for="username"><i class="fa-solid fa-user"></i> Full Display Name</label>
+                                <input type="text" id="username" class="auth-input" placeholder="e.g. Akshay Sharma" required autocomplete="name">
+                            </div>
+
+                            <!-- 2. Age & Gender -->
+                            <div class="auth-grid-two">
+                                <div class="form-group">
+                                    <label for="age"><i class="fa-solid fa-calendar-days"></i> Age</label>
+                                    <input type="number" id="age" class="auth-input" placeholder="21" min="15" max="90" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="gender"><i class="fa-solid fa-venus-mars"></i> Gender</label>
+                                    <select id="gender" class="auth-input" required>
+                                        <option value="" disabled selected>Select</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- 3. Gmail -->
+                            <div class="form-group">
+                                <label for="email"><i class="fa-solid fa-envelope"></i> Gmail Address</label>
+                                <input type="email" id="email" class="auth-input" placeholder="name@gmail.com" required autocomplete="email">
+                            </div>
+
+                            <!-- 4. Institution -->
+                            <div class="form-group">
+                                <label for="institution"><i class="fa-solid fa-building"></i> School / Institution</label>
+                                <input type="text" id="institution" class="auth-input" placeholder="e.g. Engineering / Tech Institute" required>
+                            </div>
+
+                            <!-- 5. Role -->
+                            <div class="form-group">
+                                <label for="role"><i class="fa-solid fa-users-gear"></i> Joining As (Role)</label>
+                                <select id="role" class="auth-input" required onchange="handleRoleChange(this.value)">
+                                    <option value="trainee" selected>Trainee (Learner)</option>
+                                    <option value="trainer">Trainer (Instructor)</option>
+                                    <option value="admin">Admin (Leadership &amp; Governance)</option>
+                                </select>
+                            </div>
+
+                            <!-- 6. Domain -->
+                            <div class="form-group" id="profession-group">
+                                <label for="profession-select" id="profession-label"><i class="fa-solid fa-book-open-reader"></i> Study Domain</label>
+                                <select id="profession-select" class="auth-input" onchange="handleDomainSelectChange(this.value)">
+                                    <option value="Full-Stack Web Development" selected>Full-Stack Web Development</option>
+                                    <option value="Cloud Architecture &amp; DevOps">Cloud Architecture &amp; DevOps</option>
+                                    <option value="AI &amp; Machine Learning">AI &amp; Machine Learning</option>
+                                    <option value="Cybersecurity &amp; DevSecOps">Cybersecurity &amp; DevSecOps</option>
+                                    <option value="Data Engineering &amp; Analytics">Data Engineering &amp; Analytics</option>
+                                    <option value="VLSI Design &amp; Embedded Systems">VLSI Design &amp; Embedded Systems</option>
+                                    <option value="custom">Other / Custom Domain...</option>
+                                </select>
+                                <input type="text" id="profession-custom" class="auth-input" placeholder="Enter custom subject domain..." style="display:none; margin-top:6px;">
+                            </div>
+
+                            <button type="submit" class="auth-btn" id="btn-send-otp">
+                                <span>Send Verification OTP</span>
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </form>
+
+                        <div class="form-footer">
+                            EduPeers L&amp;D Portal • 3-Role System • <i class="fa-solid fa-shield-halved" style="color:rgba(0,242,255,0.6);"></i> OTP-Secured
+                        </div>
+                    </section>
+
+                    <!-- ========================================== -->
+                    <!-- STEP 2: OTP VERIFICATION FORM              -->
+                    <!-- ========================================== -->
+                    <section id="step-2" class="auth-step-panel" aria-hidden="true" style="display:none;">
+                        <form id="otp-verify-form" onsubmit="handleVerifyOtp(event)">
+                            <div class="otp-banner">
+                                <div class="otp-banner-icon"><i class="fa-solid fa-key"></i></div>
+                                <div>
+                                    <div style="font-size:0.92rem; font-weight:700; color:#fff; margin-bottom:2px;">Confirm Secure Code</div>
+                                    <p id="otp-sent-note" style="font-size:0.78rem; color:rgba(255,255,255,0.65); margin:0;">
+                                        Enter the 6-digit code sent to your Gmail.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:14px; padding:14px; margin-bottom:1rem;">
+                                <label for="otp" style="display:block; text-align:center; font-size:0.72rem; font-weight:700; color:#00f2ff; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px;">
+                                    <i class="fa-solid fa-shield-halved" style="margin-right:4px;"></i> Enter 6-Digit OTP Code
+                                </label>
+                                <input
+                                    type="tel"
+                                    id="otp"
+                                    class="otp-input-field"
+                                    inputmode="numeric"
+                                    pattern="[0-9]*"
+                                    maxlength="6"
+                                    required
+                                    autocomplete="one-time-code"
+                                    placeholder="——————"
+                                    oninput="updateOtpHint(this.value)"
+                                >
+                                <div id="otp-live-hint" style="text-align:center; margin-top:8px; font-size:0.78rem; font-weight:600; min-height:18px;"></div>
+                            </div>
+
+                            <button type="submit" class="auth-btn" id="btn-verify-submit">
+                                <span>Verify &amp; Enter Workspace</span>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+
+                            <button type="button" class="auth-btn auth-btn-secondary" onclick="backToStep1()">
+                                <i class="fa-solid fa-chevron-left"></i>
+                                <span>Back to Details</span>
+                            </button>
+                        </form>
+                    </section>
+                </div>
+            </main>
+
+        </div>
+    </div>
+
+    <script>
+        let uploadedAvatarData = null;
+        let currentTargetEmail = '';
+
+        function handleRoleChange(role) {
+            const group = document.getElementById('profession-group');
+            const label = document.getElementById('profession-label');
+            const select = document.getElementById('profession-select');
+            if (role === 'admin') {
+                group.style.display = 'none';
+            } else if (role === 'trainer') {
+                group.style.display = 'block';
+                label.innerHTML = '<i class="fa-solid fa-chalkboard-user"></i> Teaching Domain';
+            } else {
+                group.style.display = 'block';
+                label.innerHTML = '<i class="fa-solid fa-book-open-reader"></i> Study Domain';
+            }
+        }
+
+        function handleDomainSelectChange(val) {
+            const customInput = document.getElementById('profession-custom');
+            if (val === 'custom') {
+                customInput.style.display = 'block';
+                customInput.required = true;
+                customInput.focus();
+            } else {
+                customInput.style.display = 'none';
+                customInput.required = false;
+            }
+        }
+
+        function getSelectedDomain() {
+            const role = document.getElementById('role').value;
+            if (role === 'admin') return 'Leadership & Governance';
+            const selectVal = document.getElementById('profession-select').value;
+            if (selectVal === 'custom') {
+                return document.getElementById('profession-custom').value.trim() || 'General';
+            }
+            return selectVal;
+        }
+
+        function handlePhotoPreview(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    uploadedAvatarData = evt.target.result;
+                    const preview = document.getElementById('photo-preview');
+                    preview.innerHTML = `<img src="${uploadedAvatarData}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function showAlert(message, type = 'warning') {
+            const alertBox = document.getElementById('status-alert');
+            alertBox.className = `status-alert ${type}`;
+            alertBox.innerHTML = message;
+            alertBox.style.display = 'block';
+        }
+
+        async function handleSendOtp(e) {
+            e.preventDefault();
+            const username    = document.getElementById('username').value.trim();
+            const age         = document.getElementById('age').value;
+            const gender      = document.getElementById('gender').value;
+            const email       = document.getElementById('email').value.trim();
+            const institution = document.getElementById('institution').value.trim();
+            const role        = document.getElementById('role').value;
+            const profession  = getSelectedDomain();
+
+            const btn = document.getElementById('btn-send-otp');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending OTP...';
+
+            try {
+                const res = await fetch('/api/auth/send-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, age, gender, email, institution, role, profession, avatar: uploadedAvatarData })
+                });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    showAlert(data.error || 'Failed to send OTP', 'danger');
+                    btn.disabled = false;
+                    btn.innerHTML = '<span>Send Verification OTP</span> <i class="fa-solid fa-paper-plane"></i>';
+                    return;
+                }
+
+                currentTargetEmail = email;
+                showAlert(`✅ OTP sent to <strong>${email}</strong>! Enter the 6-digit code below.`, 'success');
+
+                const step1El = document.getElementById('step-1');
+                const step2El = document.getElementById('step-2');
+                step1El.classList.remove('is-active');
+                step1El.style.setProperty('display', 'none', 'important');
+                step1El.setAttribute('aria-hidden', 'true');
+                step2El.classList.add('is-active');
+                step2El.style.setProperty('display', 'block', 'important');
+                step2El.setAttribute('aria-hidden', 'false');
+
+                document.getElementById('otp-sent-note').innerHTML =
+                    `We sent a 6-digit verification code to <strong style="color:#fff;">${email}</strong>. Check your inbox.`;
+
+                const otpInput = document.getElementById('otp');
+                otpInput.value = '';
+                updateOtpHint('');
+                setTimeout(() => { otpInput.focus(); }, 100);
+
+                btn.disabled = false;
+                btn.innerHTML = '<span>Send Verification OTP</span> <i class="fa-solid fa-paper-plane"></i>';
+            } catch (err) {
+                showAlert('Network error: ' + err.message, 'danger');
+                btn.disabled = false;
+                btn.innerHTML = '<span>Send Verification OTP</span> <i class="fa-solid fa-paper-plane"></i>';
+            }
+        }
+
+        function updateOtpHint(val) {
+            const hint = document.getElementById('otp-live-hint');
+            if (!hint) return;
+            const digits = (val || '').replace(/\D/g, '').length;
+            if (digits === 0) {
+                hint.innerHTML = '<span style="color:rgba(255,255,255,0.4);">Type the 6-digit code from your email</span>';
+            } else if (digits < 6) {
+                hint.innerHTML = `<span style="color:#ffd166;">⬤ ${digits} / 6 digits entered</span>`;
+            } else {
+                hint.innerHTML = `<span style="color:#7cf29a;">✅ 6 digits ready — click Verify below</span>`;
+            }
+        }
+
+        async function handleVerifyOtp(e) {
+            e.preventDefault();
+            const otp = document.getElementById('otp').value.trim();
+            const btn = document.getElementById('btn-verify-submit');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
+
+            try {
+                const res = await fetch('/api/auth/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: currentTargetEmail, otp })
+                });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    showAlert(data.error || 'OTP verification failed', 'danger');
+                    btn.disabled = false;
+                    btn.innerHTML = '<span>Verify &amp; Enter Workspace</span> <i class="fa-solid fa-arrow-right"></i>';
+                    return;
+                }
+
+                localStorage.setItem('edupeers_token',    data.token);
+                localStorage.setItem('edupeers_user',     JSON.stringify(data.user));
+                localStorage.setItem('edupeers_username', data.user.username);
+                localStorage.setItem('edupeers_role',     data.user.role);
+                localStorage.setItem('edupeers_email',    data.user.email);
+                localStorage.setItem('edupeers_status',   data.user.status);
+
+                showAlert('✅ Verification successful! Loading your workspace...', 'success');
+                setTimeout(() => { window.location.href = 'index.html'; }, 500);
+            } catch (err) {
+                showAlert('Error verifying OTP: ' + err.message, 'danger');
+                btn.disabled = false;
+                btn.innerHTML = '<span>Verify &amp; Enter Workspace</span> <i class="fa-solid fa-arrow-right"></i>';
+            }
+        }
+
+        function backToStep1() {
+            const step1El = document.getElementById('step-1');
+            const step2El = document.getElementById('step-2');
+            step2El.classList.remove('is-active');
+            step2El.style.setProperty('display', 'none', 'important');
+            step2El.setAttribute('aria-hidden', 'true');
+            step1El.classList.add('is-active');
+            step1El.style.setProperty('display', 'block', 'important');
+            step1El.setAttribute('aria-hidden', 'false');
+            showAlert('Enter your details and click Send OTP', 'warning');
+        }
+
+        // Fast Demo Login
+        async function quickLoginDemo(email, password) {
+            showAlert('Logging in with test credentials...', 'warning');
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                localStorage.setItem('edupeers_token',    data.token);
+                localStorage.setItem('edupeers_user',     JSON.stringify(data.user));
+                localStorage.setItem('edupeers_username', data.user.username);
+                localStorage.setItem('edupeers_role',     data.user.role);
+                localStorage.setItem('edupeers_email',    data.user.email);
+                localStorage.setItem('edupeers_status',   data.user.status);
+                showAlert(`Authenticated as ${data.user.role.toUpperCase()}! Redirecting...`, 'success');
+                setTimeout(() => { window.location.href = 'index.html'; }, 400);
+            } catch (err) {
+                showAlert('Demo login failed: ' + err.message, 'danger');
+            }
+        }
+    </script>
+</body>
+</html>
