@@ -59,13 +59,14 @@ EduPeers is a full-stack, modern enterprise Learning & Development platform buil
    cp .env.example .env
    ```
    Edit `.env` with your PostgreSQL database URL and AI API keys.
+   **Security Note:** Never upload API keys, passwords, or `.env` files to GitHub. Keep all credentials private.
 
-4. **Initialize Database Schema & Seeds**:
+5. **Initialize Database Schema & Seeds**:
    ```bash
    node seed.js
    ```
 
-5. **Start the Platform**:
+6. **Start the Platform**:
    ```bash
    node server.js
    ```
